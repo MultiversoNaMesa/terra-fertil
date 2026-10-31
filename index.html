@@ -59,11 +59,13 @@ b{font-weight:700}
 @media (max-width:760px){.hero .wrap{grid-template-columns:1fr}.hero .emblem{width:min(220px,60vw);margin:0 auto}}
 
 /* navegação */
-.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hero-bg2);border-bottom:1px solid rgba(241,210,122,.25)}
+.nav{position:sticky;overflow:hidden;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hero-bg2);border-bottom:1px solid rgba(241,210,122,.25)}
 .nav .wrap{display:flex;gap:4px 18px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
 .nav .wrap::-webkit-scrollbar{display:none}
 .nav a{color:var(--hero-ink);text-decoration:none;font-size:14px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;opacity:.85;padding:2px 0}
 .nav a:hover{color:var(--hero-gold);opacity:1}
+.nav .more{position:absolute;top:0;bottom:0;right:0;width:84px;display:flex;align-items:center;justify-content:flex-end;padding-right:max(14px,env(safe-area-inset-right,0px));background:linear-gradient(to right,transparent,var(--hero-bg2) 55%);color:var(--hero-gold);font-size:26px;line-height:1;cursor:pointer;border:none;font-family:var(--display);transition:opacity .2s}
+.nav.end .more{opacity:0;pointer-events:none}
 
 /* seções */
 section{padding-block:40px 10px}
@@ -165,8 +167,9 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
 
 <nav class="nav" aria-label="Seções">
   <div class="wrap">
-    <a href="#objetivo">Objetivo</a><a href="#componentes">Componentes</a><a href="#preparacao">Preparação</a><a href="#turno">O turno</a><a href="#construcoes">Construções</a><a href="#terrenos">Terrenos</a><a href="#pontos">Pontos e fim</a><a href="#ataques">Ataques</a><a href="#outras">Outras regras</a><a href="#cartas">Cartas</a><a href="#baralho">Com baralho comum</a><a href="#resumo">Resumo</a>
+    <a href="#objetivo">Objetivo</a><a href="#componentes">Componentes</a><a href="#preparacao">Preparação</a><a href="#turno">O turno</a><a href="#construcoes">Construções</a><a href="#terrenos">Terrenos</a><a href="#pontos">Vitória</a><a href="#ataques">Ataques</a><a href="#outras">Outras regras</a><a href="#cartas">Cartas</a><a href="#baralho">Com baralho comum</a><a href="#resumo">Resumo</a>
   </div>
+  <button class="more" type="button" aria-label="Mais seções">›</button>
 </nav>
 
 <main class="wrap">
@@ -174,10 +177,15 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
 <section id="objetivo">
   <div class="eyebrow">Visão geral</div>
   <h2>Objetivo</h2>
-  <p>Seja o <b>primeiro a somar a meta de pontos no mapa</b>: <b>15 PV</b> com 4 jogadores, <b>16 PV</b> com 3 e <b>18 PV</b> com 2. Os pontos vêm das suas construções: cada assentamento, oficina, torre e castelo no mapa vale pontos enquanto estiver de pé.</p>
-  <p>Quando alguém chega à meta, a rodada termina para que todos joguem o mesmo número de turnos. Então cada jogador soma às construções as <b>cartas de pontos</b> do seu baralho. Quem tiver mais pontos vence.</p>
-  <div class="callout">
-    <p><b>O gancho do jogo:</b> toda vez que você constrói um assentamento, a carta de produção daquele terreno entra no seu baralho. O território alimenta o baralho, e o baralho paga o território. Expandir demais, porém, enche o baralho de cartas fracas. Saber a hora de parar, melhorar e exilar é metade da partida.</p>
+  <p>Você comanda um grupo de colonos que reconstrói um continente arrasado. A cada turno, você <b>joga cartas</b> da mão para gerar recursos, usa os recursos para <b>construir no mapa</b> e compra <b>cartas melhores</b> no mercado. Cada construção sua vale <b>pontos de vitória (PV)</b> enquanto estiver de pé.</p>
+  <p>Vence quem for o <b>primeiro a somar a meta de PV no mapa</b>: <b>15 PV</b> com 4 jogadores, <b>16 PV</b> com 3 e <b>18 PV</b> com 2. Quando alguém chega à meta, a rodada termina para que todos joguem o mesmo número de turnos. Então cada jogador soma às construções as <b>cartas de pontos</b> que tiver no baralho. Quem tiver mais pontos vence.</p>
+  <div class="cols">
+    <div class="callout">
+      <p><b>O gancho do jogo:</b> toda vez que você funda um <b>assentamento</b> <svg class="ic big" style="fill:var(--ink)"><use href="#p-settle"/></svg> (a peça da vilinha, sua construção básica), a carta de produção daquele terreno entra no seu baralho. Mais terra, mais cartas boas, mais recursos, mais construções. O que atrapalha não é ter muitas cartas, e sim carregar cartas fracas: os Colonos do começo e o Entulho que os rivais te mandam. Para se livrar delas existe o <b>exílio</b>.</p>
+    </div>
+    <div class="callout">
+      <p><b>Descarte não é lixo.</b> Suas cartas circulam entre três pilhas: <b>baralho</b>, <b>mão</b> e <b>descarte</b>. Carta jogada, comprada ou ganha vai para o descarte. Quando o baralho acaba, você embaralha o descarte, e ele vira o baralho novo. Tudo o que entra no descarte volta à sua mão em poucas rodadas. A única forma de tirar uma carta do jogo de vez é <b>exilá-la</b>.</p>
+    </div>
   </div>
 </section>
 
@@ -228,7 +236,7 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
     <li><div><b class="t">Separe as pilhas de produção</b>Deixe ao lado do mapa, separadas por tipo, as cartas de <b>Bosque, Lavoura, Lavra, Feira e Relíquia</b> e as cinco cartas de oficina (<b>Serraria, Moinho, Pedreira, Mercado e Santuário</b>). Ninguém compra essas cartas: você as ganha ao construir.</div></li>
     <li><div><b class="t">Prepare o mercado</b>Embaralhe as 58 cartas de mercado e abra <b>6 cartas</b> em fila. Deixe os 12 <b>Entulhos</b> numa pilha à parte.</div></li>
     <li><div><b class="t">Monte o seu baralho inicial</b>Cada jogador recebe <b>5 Colonos, 2 Lenhadores, 2 Agricultoras e 1 Pedreiro</b>, embaralha e compra <b>5 cartas</b>. Pegue também as peças da sua cor.</div></li>
-    <li><div><b class="t">Funde o primeiro assentamento</b>O jogador mais novo começa. Em ordem de jogo, cada jogador coloca <b>um assentamento grátis</b> num hexágono vazio da <b>borda</b> do mapa e pega a carta de produção daquele terreno para o descarte. Tudo o que você construir depois precisa ser vizinho de algo seu.</div></li>
+    <li><div><b class="t">Funde o primeiro assentamento</b>O jogador mais novo começa. Em ordem de jogo, cada jogador coloca <b>um assentamento grátis</b> <svg class="ic big" style="fill:var(--ink)"><use href="#p-settle"/></svg> num hexágono vazio da <b>borda</b> do mapa e põe a carta de produção daquele terreno no seu <b>descarte</b> (ela entra no baralho na primeira vez que você embaralhar). Tudo o que você construir depois precisa ser vizinho de algo seu.</div></li>
     <li><div><b class="t">Compense quem joga depois</b>No primeiro turno, o <b>2º jogador recebe 1 moeda</b> extra, e o <b>3º e o 4º recebem 2 moedas</b>. É o suficiente para equilibrar a vantagem de quem abre a partida.</div></li>
   </ol>
 </section>
@@ -253,9 +261,9 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
   <div class="bld">
     <div class="card-box">
       <svg class="piece"><use href="#p-settle"/></svg>
-      <h3>Assentamento</h3>
+      <h3>Assentamento <span style="font-family:var(--body);font-weight:400;font-size:15px;color:var(--muted)">· a vilinha</span></h3>
       <div class="meta"><span class="cost"><svg class="ic"><use href="#i-madeira"/></svg><svg class="ic"><use href="#i-grao"/></svg></span><span class="pv">1 PV</span></div>
-      <p>Num hexágono vazio <b>vizinho de uma construção sua</b>. Você ganha a carta de produção do terreno. Em Ruína e no Coração, custa <svg class="ic"><use href="#i-pedra"/></svg> a mais.</p>
+      <p>A construção básica. Num hexágono vazio <b>vizinho de uma construção sua</b>. Você ganha a carta de produção do terreno. Em Ruína e no Coração, custa <svg class="ic"><use href="#i-pedra"/></svg> a mais.</p>
     </div>
     <div class="card-box">
       <svg class="piece"><use href="#p-shop"/></svg>
@@ -307,8 +315,8 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
 </section>
 
 <section id="pontos">
-  <div class="eyebrow">Como se ganha</div>
-  <h2>Pontos e fim da partida</h2>
+  <div class="eyebrow">Pontos e fim da partida</div>
+  <h2>Vitória</h2>
   <div class="cols">
     <div>
       <h3 style="margin-top:0">Pontos no mapa</h3>
@@ -334,7 +342,7 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
       </table></div>
       <h3>Fim da partida</h3>
       <ol>
-        <li>Quando alguém termina o turno com a meta no mapa, a partida entra na <b>última rodada</b>: joga-se até o jogador à direita de quem começou.</li>
+        <li>Quando alguém termina o turno com a meta no mapa, a partida entra na <b>última rodada</b>: joga-se até o jogador à direita de quem começou. Se quem chegou à meta for o <b>último da rodada</b>, a partida termina ali mesmo. Se for o primeiro, todos os outros ainda jogam uma vez, e podem ultrapassá-lo.</li>
         <li>Cada jogador soma os pontos do mapa às <b>cartas de pontos</b> de todo o seu baralho, mão e descarte: <b>Monumento 3</b>, <b>Santuário 2</b>, <b>Relíquia 1</b> e <b>Entulho −1</b>.</li>
         <li>Quem tiver mais pontos vence. Empate: quem tiver <b>mais construções</b> no mapa.</li>
       </ol>
@@ -460,6 +468,10 @@ html{scroll-behavior:smooth;scroll-padding-top:60px}
 <footer class="wrap">Terra Fértil · protótipo v0.5 · um jogo do canal <b>MultiVersoNaMesa</b>. © 2026 Lucas. Todos os direitos reservados. Regras sujeitas a ajuste nos testes de mesa.</footer>
 
 <script>
+(()=>{const nav=document.querySelector('.nav'),w=nav.querySelector('.wrap'),b=nav.querySelector('.more');
+const chk=()=>nav.classList.toggle('end',w.scrollLeft+w.clientWidth>=w.scrollWidth-4);
+w.addEventListener('scroll',chk,{passive:true});addEventListener('resize',chk);chk();
+b.addEventListener('click',()=>w.scrollBy({left:220,behavior:'smooth'}));})();
 const G=[
  ['Iniciais','Cada jogador começa com estas 10 cartas.',[['C01','Colono',20],['C02','Lenhador',8],['C03','Agricultora',8],['C04','Pedreiro',4]]],
  ['Mercado','58 cartas no baralho do mercado.',[['C05','Batedora',3],['C06','Ermitão',3],['C07','Mercador',3],['C08','Serralheira',3],['C09','Celeiro',3],['C10','Canteiro',3],['C11','Arauto',3],['C12','Engenheira',2],['C13','Cartógrafo',2],['C14','Prefeita',2],['C15','Pioneiro',2],['C16','Monumento',3],['C17','Pedágio',2],['C18','Taberneira',2],['C29','Cobradora',2],['C30','Armazém',3],['C31','Negociante',3],['C28','Guarda',4],['C24','Saqueadora',3],['C25','Incendiário',2],['C26','Sabotadora',2],['C27','Tempestade de Cinzas',3]]],
