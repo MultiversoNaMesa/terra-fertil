@@ -1,0 +1,6 @@
+# Terra Fértil
+
+Jogo de tabuleiro de deckbuilding e construção em mapa de hexágonos, do canal MultiVersoNaMesa.
+
+- Livro de regras: `index.html`
+- Versão digital (contra bots): `jogar.html`

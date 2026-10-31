@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style></head><body>
+<title>Terra Fértil</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: mesa de jogo — mapa + mão à esquerda, painel de controle (placar, regiões, mercado, registro) à direita */
+:root{
+  --bg:#141a19; --panel:#1b2321; --panel2:#222c29; --line:#2f3b37;
+  --ink:#ebe6d6; --muted:#9aa59f; --accent:#e2a93b; --accent-ink:#1c1507; --edge:#d8cfb4;
+  --display:'Alegreya SC', Georgia, 'Times New Roman', serif;
+  --body:'Alegreya Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);font-size:15px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 28px}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 18px;margin-bottom:14px}
+.top h1{font-family:var(--display);font-weight:700;font-size:30px;margin:0;letter-spacing:.02em;color:var(--accent)}
+.top .ver{color:var(--muted);font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.top .when{font-variant-numeric:tabular-nums;font-size:15px}
+.top .when b{font-family:var(--display);font-weight:500}
+.top .acts{margin-left:auto;display:flex;gap:8px}
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 12px;cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.main{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:18px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.panel h2{font-family:var(--display);font-weight:500;font-size:17px;margin:0 0 8px;letter-spacing:.03em}
+.board{position:relative;padding:8px}
+.banner{font-size:14px;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 10px;margin-bottom:6px}
+#map{width:100%;height:auto;max-height:68vh;display:block;margin:0 auto;touch-action:manipulation}
+#map .hxs{fill:none;stroke:rgba(8,12,11,.75);stroke-width:1.4}
+#map .edge-u{stroke:rgba(0,0,0,.85);stroke-width:9;stroke-linecap:round;fill:none}
+#map .piece-bg{fill:rgba(8,10,9,.55)}
+#map .bonus circle{fill:#43337a;stroke:#d9cdfa;stroke-width:1.4}
+#map .bonus text{fill:#fff;font:700 9px var(--body)}
+.pl .bar{grid-column:2 / 4;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.pl .bar span{display:block;height:100%}
+.pvtable{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:14px}
+.pvtable div{display:flex;align-items:center;gap:6px}
+.pvtable b{margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pvtable .note{grid-column:1 / 3;color:var(--muted);font-size:12.5px}
+.pvi{width:20px;height:22px;fill:var(--ink)}
+#map .wall{fill:rgba(8,10,9,.35);stroke:#efe8d6;stroke-width:3.5;stroke-dasharray:6 3}
+.actions.build{align-items:center}
+.actions.build .lab{margin:0 4px 0 0}
+#map .valid{fill:rgba(226,169,59,.18);stroke:var(--accent);stroke-width:2.5;stroke-dasharray:5 3;cursor:pointer}
+#map .valid:hover{fill:rgba(226,169,59,.38)}
+#map .edge{stroke:#ffcf4a;stroke-width:4.4;stroke-linecap:round;fill:none}
+#map .lbl{fill:var(--muted);font-family:var(--display);font-size:12.5px}
+#map .lbl tspan.v{fill:var(--accent);font-family:var(--body);font-weight:700}
+#map .piece{stroke:#0f1312;stroke-width:1.6}
+.tray{display:flex;flex-direction:column;gap:10px}
+.resbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 6px;font-weight:700;font-variant-numeric:tabular-nums;font-size:16px}
+.chip.zero{opacity:.45}
+.flag{font-size:13px;color:var(--accent);border:1px dashed var(--accent);border-radius:999px;padding:3px 9px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions .sep{flex:1}
+.lab{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:2px 0 4px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.lab .cnt{letter-spacing:0;text-transform:none;font-variant-numeric:tabular-nums}
+.linkbtn{background:none;border:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline;font-size:13px;letter-spacing:0;text-transform:none}
+.cards{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;min-height:40px}
+.cards.wrap{flex-wrap:wrap;overflow:visible}
+.empty{color:var(--muted);font-size:14px;align-self:center}
+.ic{width:17px;height:17px;vertical-align:-3px;flex:0 0 auto}
+.card{position:relative;width:124px;flex:0 0 auto;display:flex;flex-direction:column;gap:5px;padding:0 0 8px;border-radius:8px;border:1px solid var(--line);text-align:left;cursor:pointer;transition:transform .12s,border-color .12s;background:#232c29;overflow:hidden}
+.card > :not(.c-art):not(.c-cost){margin-inline:8px}
+.c-art{display:block;aspect-ratio:5/4;background:#0e1211;margin:0 0 1px}
+.c-art img{width:100%;height:100%;object-fit:cover;display:block}
+.c-cost{position:absolute;top:5px;right:5px;background:rgba(18,14,6,.82);border:1px solid rgba(227,184,74,.6);border-radius:999px;padding:1px 6px 1px 7px}
+#market .card{width:100px}
+#market .c-name{font-size:13px}
+.backthumb{width:22px;height:30px;border-radius:3px;vertical-align:-9px;box-shadow:0 1px 3px rgba(0,0,0,.6)}
+#zoom{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:270px;z-index:40;pointer-events:none;border-radius:12px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.7)}
+#zoom img{display:block;width:100%;height:auto}
+[hidden]{display:none!important}
+.card:hover:not(:disabled){transform:translateY(-3px);border-color:var(--accent)}
+.card:disabled{cursor:default}
+.card.dim{opacity:.45}
+.card.mini{width:92px;font-size:13px;cursor:default}
+.card.mini .c-name{font-size:13px}
+.card.mini:hover{transform:none;border-color:var(--line)}
+.t-base{background:#232c29}
+.t-mkt{background:#2b281c;border-color:#53452a}
+.t-prod{background:#1d2b21;border-color:#33553b}
+.t-pv{background:#262137;border-color:#4a3f6c}
+.t-atk{background:#33201f;border-color:#7a3a3c}
+.t-lixo{background:#232322;border-color:#4a4843;border-style:dashed}
+#map .valid.hostile{fill:rgba(217,103,122,.22);stroke:#e07282}
+#map .valid.hostile:hover{fill:rgba(217,103,122,.45)}
+.news{background:#33201f;border:1px solid #7a3a3c;border-radius:8px;padding:8px 12px;font-size:14px;display:flex;flex-direction:column;gap:3px}
+.exiling .card.in-hand{border-color:#d9677a;border-style:dashed}
+.c-top{display:flex;justify-content:space-between;gap:4px;align-items:flex-start}
+.c-name{font-family:var(--display);font-weight:700;font-size:14.5px;line-height:1.1;text-wrap:balance}
+.c-cost{display:inline-flex;align-items:center;gap:2px;font-weight:700;font-variant-numeric:tabular-nums}
+.c-eff{display:flex;flex-direction:column;gap:4px}
+.gains{display:flex;flex-wrap:wrap;gap:4px 8px}
+.gain{display:inline-flex;align-items:center;gap:3px;font-weight:700;font-variant-numeric:tabular-nums}
+.c-text{font-size:12.5px;color:var(--muted);line-height:1.25}
+.c-type{margin-top:auto;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.players{display:flex;flex-direction:column;gap:6px}
+.pl{display:grid;grid-template-columns:12px 1fr auto;gap:2px 8px;align-items:center;padding:6px 8px;border-radius:6px;border:1px solid transparent}
+.pl.now{border-color:var(--line);background:var(--panel2)}
+.dot{width:12px;height:12px;border-radius:50%}
+.pl .nm{font-weight:700}
+.pl .pv{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.pl .meta{grid-column:2 / 4;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rg{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:5px 0;border-top:1px solid var(--line)}
+.rg:first-of-type{border-top:none}
+.rg .nm{font-size:14px}
+.rg .val{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right}
+.rg .st{grid-column:1 / 3;display:flex;gap:6px;flex-wrap:wrap}
+.pill{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;font-variant-numeric:tabular-nums;color:#141a19}
+.pill.lead{outline:2px solid var(--ink);outline-offset:1px}
+.mk-foot{font-size:12.5px;color:var(--muted);margin-top:4px}
+.log{max-height:220px;overflow:auto;font-size:13.5px;display:flex;flex-direction:column;gap:5px;color:#cfd3c9}
+#ov{position:fixed;inset:0;background:rgba(8,11,10,.74);display:flex;align-items:flex-start;justify-content:center;z-index:50;overflow:auto;
+  padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.dlg{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:640px;width:100%;padding:18px 20px;margin-top:4vh}
+.dlg h2{font-family:var(--display);font-size:24px;margin:0 0 10px;color:var(--accent);font-weight:700;text-wrap:balance}
+.dlg h3{font-family:var(--display);font-size:17px;margin:16px 0 4px;font-weight:500}
+.dlg p,.dlg li{max-width:65ch}
+.dlg ul{padding-left:20px;margin:6px 0}
+.dlg .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.dlg .lines{display:flex;flex-direction:column;gap:6px}
+.dlg table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.dlg th,.dlg td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+.dlg th:first-child,.dlg td:first-child{text-align:left}
+.tbl{overflow-x:auto}
+.form{display:flex;flex-direction:column;gap:12px}
+.form label{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.form input[type=number]{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:7px 10px;color:var(--ink);font:inherit;max-width:180px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card:hover:not(:disabled){transform:none}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-moeda" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#e3b84a" stroke="#8a6a1f" stroke-width="1.5"/><circle cx="10" cy="10" r="4.2" fill="none" stroke="#8a6a1f" stroke-width="1.4"/></symbol>
+  <symbol id="i-madeira" viewBox="0 0 20 20"><rect x="2" y="4" width="16" height="5.5" rx="2.7" fill="#9c6a3c"/><rect x="2" y="11" width="16" height="5.5" rx="2.7" fill="#b98250"/><circle cx="15.3" cy="6.7" r="1.9" fill="#e6c590"/><circle cx="15.3" cy="13.7" r="1.9" fill="#e6c590"/></symbol>
+  <symbol id="i-grao" viewBox="0 0 20 20"><path d="M10 19V6" stroke="#c9b052" stroke-width="1.6" fill="none"/><ellipse cx="10" cy="4.5" rx="2" ry="3" fill="#ead26c"/><ellipse cx="7" cy="9" rx="1.8" ry="2.8" transform="rotate(-30 7 9)" fill="#ead26c"/><ellipse cx="13" cy="9" rx="1.8" ry="2.8" transform="rotate(30 13 9)" fill="#ead26c"/><ellipse cx="7" cy="13.5" rx="1.8" ry="2.8" transform="rotate(-30 7 13.5)" fill="#ead26c"/><ellipse cx="13" cy="13.5" rx="1.8" ry="2.8" transform="rotate(30 13 13.5)" fill="#ead26c"/></symbol>
+  <symbol id="i-pedra" viewBox="0 0 20 20"><polygon points="2.5,15.5 5.5,6.5 11.5,3 17.5,8 16.5,16.5" fill="#aab0b4" stroke="#6b7278" stroke-width="1.3"/><path d="M5.5 6.5 L10 10 L16.5 16.5 M10 10 L11.5 3" stroke="#6b7278" stroke-width="1" fill="none"/></symbol>
+  <symbol id="i-reliq" viewBox="0 0 20 20"><path d="M3 18V8l3-3v13M8 18V4l4 2v12M14 18V9l3 2v7" fill="#b9a6dd" stroke="#5c4d84" stroke-width="1.2"/></symbol>
+</svg>
+
+<header class="top">
+  <h1>Terra Fértil</h1>
+  <span class="ver">protótipo v0.5</span>
+  <span class="when" id="when"></span>
+  <div class="acts">
+    <a class="btn" href="index.html" style="text-decoration:none">Livro de regras</a>
+    <button class="btn" data-act="rules">Regras</button>
+    <button class="btn" data-act="setup">Nova partida</button>
+  </div>
+</header>
+
+<main class="layout">
+  <div class="col">
+    <section class="panel board">
+      <div class="banner" id="banner"></div>
+      <svg id="map" viewBox="-305 -270 610 540" role="img" aria-label="Mapa do continente"></svg>
+    </section>
+    <section class="panel tray" id="tray"></section>
+  </div>
+  <aside class="col">
+    <section class="panel"><h2>Placar</h2><div class="players" id="players"></div></section>
+    <section class="panel"><h2>Quanto vale cada construção</h2><div class="pvtable" id="pvtable"></div></section>
+    <section class="panel"><h2>Mercado</h2><div class="cards wrap" id="market"></div><div class="mk-foot" id="mkfoot"></div></section>
+    <section class="panel"><h2>Registro</h2><div class="log" id="log"></div></section>
+  </aside>
+</main>
+
+<div id="ov" hidden></div>
+<div id="zoom" hidden><img alt=""></div>
+
+<script>
+/* ===================== DADOS ===================== */
+const RES=['moeda','madeira','grao','pedra'];
+const RES_NAME={moeda:'Moeda',madeira:'Madeira',grao:'Grão',pedra:'Pedra'};
+const DEFS={
+  colono:{name:'Colono',type:'base',gain:{moeda:1}},
+  lenhador:{name:'Lenhador',type:'base',gain:{madeira:1}},
+  agricultora:{name:'Agricultora',type:'base',gain:{grao:1}},
+  pedreiro:{name:'Pedreiro',type:'base',gain:{pedra:1}},
+  batedora:{name:'Batedora',cost:3,draw:2},
+  ermitao:{name:'Ermitão',cost:2,gain:{moeda:1},exile:1,text:'Exile 1 carta da sua mão.'},
+  mercador:{name:'Mercador',cost:3,gain:{moeda:2}},
+  serralheira:{name:'Serralheira',cost:3,gain:{madeira:2}},
+  celeiro:{name:'Celeiro',cost:3,gain:{grao:2}},
+  canteiro:{name:'Canteiro',cost:4,gain:{pedra:2}},
+  arauto:{name:'Arauto',cost:3,gain:{moeda:1},draw:1},
+  engenheira:{name:'Engenheira',cost:5,gain:{madeira:1,grao:1,pedra:1}},
+  cartografo:{name:'Cartógrafo',cost:3,gain:{moeda:1},carto:true,text:'Neste turno, construa sem precisar de adjacência.'},
+  prefeita:{name:'Prefeita',cost:6,gain:{moeda:3},draw:1},
+  pioneiro:{name:'Pioneiro',cost:5,gain:{madeira:1,grao:1},draw:1},
+  monumento:{name:'Monumento',cost:6,type:'pv',vp:3,text:'Sem efeito. Vale 3 PV no fim.'},
+  pedagio:{name:'Pedágio',cost:4,special:'pedagio',text:'+1 moeda por torre ou castelo seu.'},
+  taberneira:{name:'Taberneira',cost:4,special:'taberna',text:'+1 moeda por construção sua (máx. 3).'},
+  bosque:{name:'Bosque',type:'prod',gain:{madeira:1}},
+  lavoura:{name:'Lavoura',type:'prod',gain:{grao:1}},
+  lavra:{name:'Lavra',type:'prod',gain:{pedra:1}},
+  feira:{name:'Feira',type:'prod',gain:{moeda:2}},
+  reliquia:{name:'Relíquia',type:'pv',vp:1,text:'Sem efeito. Vale 1 PV no fim.'},
+  saqueadora:{name:'Saqueadora',cost:4,type:'atk',gain:{moeda:1},atk:'raid',text:'Cada oponente descarta 1 carta aleatória da mão.'},
+  incendiario:{name:'Incendiário',cost:5,type:'atk',gain:{moeda:1},atk:'burn',text:'Destrua 1 assentamento ou oficina rival vizinho de você.'},
+  sabotadora:{name:'Sabotadora',cost:4,type:'atk',gain:{pedra:1},atk:'sab',text:'Rebaixe 1 construção rival um nível.'},
+  tempestade:{name:'Tempestade de Cinzas',cost:5,type:'atk',gain:{grao:1},atk:'ash',text:'Cada oponente recebe 1 Entulho no descarte.'},
+  guarda:{name:'Guarda',cost:3,gain:{madeira:1},text:'Na sua mão, bloqueia todos os ataques contra você.'},
+  cobradora:{name:'Cobradora',cost:3,gain:{moeda:1},special:'cobra',text:'+1 moeda por oponente com mais PV que você.'},
+  armazem:{name:'Armazém',cost:4,gain:{moeda:1},store:2,text:'Guarde até 2 recursos para o próximo turno.'},
+  negociante:{name:'Negociante',cost:3,gain:{moeda:1},trade2:true,text:'Neste turno suas trocas custam 2 por 1.'},
+  entulho:{name:'Entulho',type:'lixo',vp:-1,text:'Sem efeito. Vale −1 PV no fim. Exile para se livrar.'},
+  serraria:{name:'Serraria',type:'prod',gain:{madeira:2}},
+  moinho:{name:'Moinho',type:'prod',gain:{grao:2}},
+  pedreira:{name:'Pedreira',type:'prod',gain:{pedra:2}},
+  mercado:{name:'Mercado',type:'prod',gain:{moeda:3}},
+  santuario:{name:'Santuário',type:'prod',gain:{moeda:1},vp:2,text:'Vale 2 PV no fim.'},
+};
+const MARKET=[['batedora',3],['ermitao',3],['mercador',3],['serralheira',3],['celeiro',3],['canteiro',3],['arauto',3],['engenheira',2],['cartografo',2],['prefeita',2],['pioneiro',2],['monumento',3],['pedagio',2],['taberneira',2],
+  ['saqueadora',3],['incendiario',2],['sabotadora',2],['tempestade',3],['guarda',4],['cobradora',2],['armazem',3],['negociante',3]];
+const CODE={colono:'C01',lenhador:'C02',agricultora:'C03',pedreiro:'C04',batedora:'C05',ermitao:'C06',mercador:'C07',serralheira:'C08',celeiro:'C09',canteiro:'C10',arauto:'C11',engenheira:'C12',cartografo:'C13',prefeita:'C14',pioneiro:'C15',monumento:'C16',pedagio:'C17',taberneira:'C18',bosque:'C19',lavoura:'C20',lavra:'C21',feira:'C22',reliquia:'C23',saqueadora:'C24',incendiario:'C25',sabotadora:'C26',tempestade:'C27',guarda:'C28',cobradora:'C29',armazem:'C30',negociante:'C31',entulho:'C32',serraria:'C33',moinho:'C34',pedreira:'C35',mercado:'C36',santuario:'C37'};
+const BUILD={
+  tower:{name:'Torre',from:['settle'],cost:{pedra:1,grao:1,moeda:2},vp:1},
+  shop:{name:'Oficina',from:['settle'],cost:{madeira:1,pedra:1,moeda:2}},
+  castle:{name:'Castelo',from:['tower'],cost:{pedra:1,madeira:1,moeda:3},vp:3},
+};
+const WALL_COST={pedra:1,moeda:3};
+const KIND_NAME={settle:'Assentamento',shop:'Oficina',tower:'Torre',castle:'Castelo'};
+const SHOP_CARD={floresta:'serraria',campo:'moinho',colina:'pedreira',vila:'mercado',ruina:'santuario'};
+const TILE_CODE={floresta:'T01',campo:'T02',colina:'T03',vila:'T04',ruina:'T05'};
+const ATTACK_NAME={raid:'Saqueadora',burn:'Incendiário',sab:'Sabotadora',ash:'Tempestade de Cinzas'};
+const TERRAIN={
+  floresta:{name:'Floresta',prod:'bosque',icon:'madeira',fill:'#35583c'},
+  campo:{name:'Campo',prod:'lavoura',icon:'grao',fill:'#857334'},
+  colina:{name:'Colina',prod:'lavra',icon:'pedra',fill:'#575e64'},
+  vila:{name:'Vila',prod:'feira',icon:'moeda',fill:'#744830'},
+  ruina:{name:'Ruína',prod:'reliquia',icon:'reliq',fill:'#3b3446'},
+};
+const TYPE_LABEL={base:'Inicial',mkt:'Mercado',prod:'Produção',pv:'Pontos',atk:'Ataque',lixo:'Entulho'};
+const COLORS=['#e2a93b','#4fb3a9','#d9677a','#a58fd8'];
+const NAMES=['Você','Aurora','Bento','Cira'];
+const META={2:18,3:16,4:15};
+const PV_KIND={settle:1,shop:1,tower:2,castle:4};
+const DELAY=750, HS=34;
+const DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+for(const k in DEFS) if(!DEFS[k].type) DEFS[k].type='mkt';
+
+/* ===================== UTIL ===================== */
+let S=null, rng=Math.random, uid=0, modalCb=null;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const mk=key=>({id:++uid,key});
+const rep=(k,n)=>Array(n).fill(k);
+const K=(q,r)=>q+','+r;
+const zero=()=>({moeda:0,madeira:0,grao:0,pedra:0});
+const cur=()=>S.players[S.cur];
+const me=()=>S.players[0];
+const hexList=()=>Object.values(S.hexes);
+const pieces=pid=>hexList().filter(h=>h.owner===pid);
+const allCards=p=>[...p.deck,...p.hand,...p.discard,...p.play];
+const neighbors=h=>DIRS.map(([a,b])=>S.hexes[K(h.q+a,h.r+b)]).filter(Boolean);
+const hexDist=(a,b)=>(Math.abs(a.q-b.q)+Math.abs(a.q+a.r-b.q-b.r)+Math.abs(a.r-b.r))/2;
+const pn=p=>`<b style="color:${p.color}">${p.name}</b>`;
+const ic=r=>`<svg class="ic" aria-label="${RES_NAME[r]||''}"><use href="#i-${r}"/></svg>`;
+const placeName=h=>h.center?'Coração':TERRAIN[h.terrain].name;
+const locBonus=h=>h.center?2:h.terrain==='ruina'?1:0;
+const hexPV=h=>h.owner===null?0:PV_KIND[h.kind]+locBonus(h);
+const boardPV=p=>pieces(p.i).reduce((a,h)=>a+hexPV(h),0);
+const cardPV=p=>allCards(p).reduce((a,c)=>a+(DEFS[c.key].vp||0),0);
+const meta=()=>META[S.players.length];
+const progress=()=>Math.max(...S.players.map(boardPV))/meta();
+function log(html){S.log.unshift(html);if(S.log.length>60)S.log.pop()}
+const myTurn=()=>S.phase==='play'&&S.cur===0&&!S.busy&&ov.hidden;
+
+/* ===================== SETUP ===================== */
+function buildMap(){
+  const hexes={};
+  hexes[K(0,0)]={q:0,r:0,ring:0,terrain:'ruina',owner:null,kind:null,center:true};
+  const terr=shuffle([...rep('floresta',9),...rep('campo',9),...rep('colina',7),...rep('vila',6),...rep('ruina',5)]);
+  let ti=0;
+  for(let k=1;k<=3;k++){
+    let q=DIRS[4][0]*k, r=DIRS[4][1]*k;
+    for(let i=0;i<6;i++)for(let j=0;j<k;j++){
+      hexes[K(q,r)]={q,r,ring:k,terrain:terr[ti++],owner:null,kind:null};
+      q+=DIRS[i][0];r+=DIRS[i][1];
+    }
+  }
+  return {hexes};
+}
+function newPlayer(i,bot){
+  const deck=[...rep('colono',5),...rep('lenhador',2),...rep('agricultora',2),'pedreiro'].map(mk);
+  return {i,name:NAMES[i],color:COLORS[i],bot,deck:shuffle(deck),hand:[],discard:[],play:[],res:zero(),flags:{},exiled:0,stored:null};
+}
+function newGame(nBots,seed){
+  rng=mulberry32(seed);uid=0;
+  const m=buildMap();
+  S={seed,nBots,hexes:m.hexes,
+     players:[],marketDeck:[],market:[],round:1,cur:0,phase:'setup',mode:null,log:[],busy:false,entulho:12,news:[]};
+  for(let i=0;i<=nBots;i++)S.players.push(newPlayer(i,i>0));
+  S.players.forEach((p,i)=>{if(i)p.stored={moeda:Math.min(i,2),madeira:0,grao:0,pedra:0}});
+  S.marketDeck=shuffle(MARKET.flatMap(([k,n])=>rep(k,n)).map(mk));
+  refillMarket();
+  S.players.forEach(p=>draw(p,5));
+  log(`Partida nova (semente ${seed}). Escolha um hexágono da borda para seu primeiro assentamento.`);
+  render();
+}
+function setupPlace(h){
+  build(me(),h,'settle',true);
+  for(const p of S.players.slice(1)){
+    let best=null,bs=-1;
+    for(const o of hexList().filter(x=>canSettleAt(p,x,true))){
+      const placed=hexList().filter(x=>x.owner!==null);
+      const sc=Math.min(...placed.map(x=>hexDist(x,o)))+rng()*1.5+(o.terrain==='vila'?.5:0);
+      if(sc>bs){bs=sc;best=o}
+    }
+    build(p,best,'settle',true);
+  }
+  S.phase='play';S.cur=0;log(`A partida começa. Meta: <b>${meta()} PV</b> no mapa.`);startTurn();
+}
+
+/* ===================== REGRAS ===================== */
+function draw(p,n){for(let i=0;i<n;i++){if(!p.deck.length){if(!p.discard.length)return;p.deck=shuffle(p.discard);p.discard=[]}p.hand.push(p.deck.pop())}}
+function refillMarket(){while(S.market.length<6&&S.marketDeck.length)S.market.push(S.marketDeck.pop())}
+function canSettleAt(p,h,free){
+  if(h.owner!==null)return false;
+  if(!pieces(p.i).length){if(h.ring!==3)return false}
+  else if(!p.flags.carto&&!neighbors(h).some(n=>n.owner===p.i))return false;
+  if(free)return true;
+  return p.res.madeira>=1&&p.res.grao>=1&&p.res.pedra>=(h.terrain==='ruina'?1:0);
+}
+const afford=(p,c)=>Object.entries(c).every(([r,n])=>p.res[r]>=n);
+const pay=(p,c)=>{for(const r in c)p.res[r]-=c[r]};
+function canBuild(p,h,k){
+  if(k==='settle')return canSettleAt(p,h);
+  if(h.owner!==p.i)return false;
+  if(k==='wall')return !h.wall&&afford(p,WALL_COST);
+  return BUILD[k].from.includes(h.kind)&&afford(p,BUILD[k].cost);
+}
+const canTowerAt=(p,h)=>canBuild(p,h,'tower');
+function build(p,h,kind,free){
+  if(kind==='wall'){
+    pay(p,WALL_COST);h.wall=true;
+    log(`${pn(p)} cerca ${KIND_NAME[h.kind].toLowerCase()} em ${placeName(h)} com uma muralha.`);return;
+  }
+  if(kind!=='settle'){
+    const b=BUILD[kind];pay(p,b.cost);h.kind=kind;
+    if(kind==='shop'){
+      const c=mk(SHOP_CARD[h.terrain]);p.discard.push(c);
+      log(`${pn(p)} constrói ${DEFS[c.key].name} em ${placeName(h)}. Ganha a carta ${DEFS[c.key].name}.`);
+    }else log(`${pn(p)} ergue ${kind==='castle'?'um castelo':'uma torre'} em ${placeName(h)}.`);
+    return;
+  }
+  {
+    if(!free){p.res.madeira--;p.res.grao--;if(h.terrain==='ruina')p.res.pedra--}
+    h.owner=p.i;h.kind='settle';
+    const c=mk(TERRAIN[h.terrain].prod);p.discard.push(c);
+    let extra='';
+    if(locBonus(h))extra=` (+${locBonus(h)} PV pelo local)`;
+    log(`${pn(p)} funda assentamento em ${placeName(h)}${extra}. Ganha a carta ${DEFS[c.key].name}.`);
+  }
+}
+function playCard(p,c){
+  const i=p.hand.indexOf(c);if(i<0)return;
+  p.hand.splice(i,1);p.play.push(c);
+  const d=DEFS[c.key];
+  if(d.gain)for(const r in d.gain)p.res[r]+=d.gain[r];
+  if(d.special==='pedagio')p.res.moeda+=pieces(p.i).filter(h=>h.kind==='tower'||h.kind==='castle').length;
+  if(d.special==='taberna')p.res.moeda+=Math.min(3,pieces(p.i).length);
+  if(d.special==='cobra')p.res.moeda+=S.players.filter(o=>o!==p&&boardPV(o)>boardPV(p)).length;
+  if(d.draw)draw(p,d.draw);
+  if(d.exile)p.flags.exile=(p.flags.exile||0)+d.exile;
+  if(d.carto)p.flags.carto=true;
+  if(d.store)p.flags.store=(p.flags.store||0)+d.store;
+  if(d.trade2)p.flags.trade2=true;
+  if(d.atk==='raid'||d.atk==='ash')for(const o of S.players)if(o!==p)hitAll(p,o,d.atk);
+  if(d.atk==='burn')p.flags.burn=(p.flags.burn||0)+1;
+  if(d.atk==='sab')p.flags.sab=(p.flags.sab||0)+1;
+}
+/* ---- ataques ---- */
+function notify(victim,html){if(victim.i===0&&cur()!==victim)S.news.push(html)}
+function blocked(attacker,victim,atk){
+  if(!victim.hand.some(c=>c.key==='guarda'))return false;
+  const t=`${pn(victim)} revela a Guarda e bloqueia ${ATTACK_NAME[atk]} de ${pn(attacker)}.`;
+  log(t);notify(victim,t);return true;
+}
+function hitAll(p,o,atk){
+  if(blocked(p,o,atk))return;
+  if(atk==='raid'){
+    if(!o.hand.length)return;
+    const c=o.hand.splice(Math.floor(rng()*o.hand.length),1)[0];o.discard.push(c);
+    const t=`${pn(p)} saqueia ${pn(o)}: ${DEFS[c.key].name} vai para o descarte.`;log(t);notify(o,t);
+  }else{
+    if(S.entulho<=0)return;
+    S.entulho--;o.discard.push(mk('entulho'));
+    const t=`${pn(p)} lança Tempestade de Cinzas: ${pn(o)} recebe 1 Entulho.`;log(t);notify(o,t);
+  }
+}
+const burnTargets=p=>hexList().filter(h=>h.owner!==null&&h.owner!==p.i&&!h.wall&&(h.kind==='settle'||h.kind==='shop')&&neighbors(h).some(n=>n.owner===p.i));
+const sabTargets=p=>hexList().filter(h=>h.owner!==null&&h.owner!==p.i&&!h.wall&&h.kind!=='settle');
+const SAB_DOWN={castle:'tower',tower:'settle',shop:'settle'};
+function strike(p,h,atk){
+  const o=S.players[h.owner];
+  if(atk==='burn')p.flags.burn--;else p.flags.sab--;
+  if(blocked(p,o,atk))return;
+  let t;
+  if(atk==='burn'){const nm=KIND_NAME[h.kind].toLowerCase(),art=h.kind==='shop'?'a':'o';h.owner=null;h.kind=null;h.wall=false;t=`${pn(p)} incendeia ${art} ${nm} de ${pn(o)} em ${placeName(h)}.`}
+  else{const from=KIND_NAME[h.kind].toLowerCase();h.kind=SAB_DOWN[h.kind];t=`${pn(p)} sabota ${from} de ${pn(o)} em ${placeName(h)}. Agora é ${KIND_NAME[h.kind].toLowerCase()}.`}
+  log(t);notify(o,t);
+}
+function tradeRate(p){return p.flags.trade2?2:3}
+function trade(p,give,get){const r=tradeRate(p);if(give===get||p.res[give]<r)return false;p.res[give]-=r;p.res[get]++;log(`${pn(p)} troca ${r} ${RES_NAME[give].toLowerCase()} por 1 ${RES_NAME[get].toLowerCase()}.`);return true}
+function pendingMode(p){
+  if((p.flags.burn||0)>0&&burnTargets(p).length)return'burn';
+  if((p.flags.sab||0)>0&&sabTargets(p).length)return'sab';
+  if((p.flags.exile||0)>0&&p.hand.length)return'exile';
+  p.flags.burn=0;p.flags.sab=0;return null;
+}
+function exileCard(p,c){const i=p.hand.indexOf(c);if(i<0)return;p.hand.splice(i,1);p.exiled++;log(`${pn(p)} exila ${DEFS[c.key].name}.`)}
+function buy(p,c){
+  const i=S.market.indexOf(c);if(i<0)return;
+  p.res.moeda-=DEFS[c.key].cost;S.market.splice(i,1);p.discard.push(c);refillMarket();
+  log(`${pn(p)} compra ${DEFS[c.key].name}.`);
+}
+
+/* ===================== FLUXO ===================== */
+function startTurn(){
+  const p=cur();p.flags={};S.mode=null;
+  if(p.stored){for(const r of RES)p.res[r]+=p.stored[r];p.stored=null}
+  if(p.bot){S.busy=true;render();setTimeout(()=>botTurn(p),DELAY)}
+  else{S.busy=false;render()}
+}
+function endTurn(){
+  const p=cur();
+  if(p.flags.store){
+    let n=p.flags.store;const kept=zero(),got=[];
+    for(const r of ['pedra','grao','madeira','moeda'])while(n>0&&p.res[r]>0){p.res[r]--;kept[r]++;n--;got.push(RES_NAME[r].toLowerCase())}
+    if(got.length){p.stored=kept;log(`${pn(p)} guarda no Armazém: ${got.join(', ')}.`)}
+  }
+  if(!p.bot)S.news=[];
+  p.discard.push(...p.hand,...p.play);p.hand=[];p.play=[];p.res=zero();p.flags={};draw(p,5);S.mode=null;
+  S.cur++;
+  if(S.cur<S.players.length){startTurn();return}
+  S.cur=0;
+  const hit=S.players.filter(x=>boardPV(x)>=meta());
+  if(hit.length||S.round>=40){finish(hit);return}
+  S.round++;startTurn();
+}
+function finalScores(){
+  return S.players.map(p=>{
+    const bp=boardPV(p),cv=cardPV(p);
+    return{p,bp,cv,total:bp+cv,build:pieces(p.i).length};
+  }).sort((a,b)=>b.total-a.total||b.build-a.build);
+}
+function finish(hit){
+  S.phase='over';S.busy=false;
+  const fs=finalScores();
+  const win=fs[0].p;
+  log(`${pn(win)} vence com ${fs[0].total} PV.`);
+  const rows=fs.map(f=>`<tr><td>${pn(f.p)}</td><td>${f.bp}</td><td>${f.cv}</td><td><b>${f.total}</b></td></tr>`).join('');
+  const who=hit.length?`${hit.map(pn).join(' e ')} chegou à meta de ${meta()} PV. A rodada terminou e as cartas de pontos foram somadas.`:'A partida chegou ao limite de rodadas.';
+  showModal(win.bot?`${win.name} venceu`:'Você venceu',
+    `<p>${who}</p>
+     <h3>Placar final</h3><div class="tbl"><table><thead><tr><th>Jogador</th><th>Mapa</th><th>Cartas de pontos</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table></div>
+     <p style="color:var(--muted);font-size:13px">${S.round} rodadas. Semente desta partida: ${S.seed}. Use a mesma semente para repetir o mapa e testar outra estratégia.</p>`,
+    'Nova partida',openSetup);
+}
+
+/* ===================== BOTS ===================== */
+function prodCount(p,r){return allCards(p).reduce((a,c)=>a+((DEFS[c.key].gain||{})[r]||0),0)}
+function engineVal(){return Math.max(0,1-progress()*1.2)}
+function settleVal(p,h){
+  let v=1+locBonus(h)*1.1;
+  if(h.terrain==='vila')v+=1.2*engineVal();
+  else if(h.terrain!=='ruina')v+=Math.max(0,1.6-.4*prodCount(p,TERRAIN[h.terrain].icon))*engineVal();
+  return v+rng()*.6;
+}
+function buildVal(p,h,k){
+  if(k==='settle')return settleVal(p,h);
+  if(k==='tower')return .9+rng()*.4;
+  if(k==='castle')return 1.9+rng()*.4;
+  if(k==='shop')return (1.6+(h.terrain==='vila'?.6:0)+(h.terrain==='ruina'?1.2:0))*engineVal()+rng()*.5;
+  if(k==='wall'){const threat=S.players.some(o=>o!==p&&allCards(o).some(c=>DEFS[c.key].atk==='burn'||DEFS[c.key].atk==='sab'));return threat?hexPV(h)*.45+rng()*.3:.1}
+  return 0;
+}
+const BKINDS=['settle','tower','shop','castle','wall'];
+function buyScore(p,c){
+  const d=DEFS[c.key];let s=d.cost;
+  const pg=progress();
+  if(d.type==='pv')s+=pg>.65?3:pg>.35?.5:-2;
+  if(d.gain?.pedra&&prodCount(p,'pedra')<3)s+=1;
+  if(d.gain?.madeira&&prodCount(p,'madeira')<4)s+=.7;
+  if(d.gain?.grao&&prodCount(p,'grao')<4)s+=.7;
+  if(c.key==='taberneira')s+=pieces(p.i).length*.4;
+  if(c.key==='pedagio')s+=pieces(p.i).filter(h=>h.kind==='tower'||h.kind==='castle').length*.6-.4;
+  if(c.key==='ermitao')s+=allCards(p).length>14?1:-1;
+  if(d.type==='atk')s+=.4;
+  if(c.key==='tempestade')s+=pg<.6?.6:-1;
+  if(c.key==='guarda')s+=allCards(p).some(x=>x.key==='guarda')?-1:.6;
+  if(c.key==='cobradora')s+=S.players.filter(o=>o!==p&&boardPV(o)>boardPV(p)).length*.6-.5;
+  if(c.key==='armazem')s+=.3;
+  if(pg>.85&&d.type!=='pv')s-=3;
+  return s+rng()*.8;
+}
+function botTrade(p){
+  const spot=hexList().some(h=>h.owner===null&&(pieces(p.i).length?(p.flags.carto||neighbors(h).some(n=>n.owner===p.i)):h.ring===3));
+  if(!spot)return;
+  for(let g=0;g<3;g++){
+    const miss=['madeira','grao'].find(r=>p.res[r]<1);
+    if(!miss)return;
+    const r=tradeRate(p);
+    const give=['moeda','pedra','madeira','grao'].find(x=>x!==miss&&p.res[x]>=r+(x==='madeira'||x==='grao'?1:0));
+    if(!give)return;
+    trade(p,give,miss);
+  }
+  for(const k of ['castle','tower']){
+    const b=BUILD[k],r=tradeRate(p);
+    if(!pieces(p.i).some(h=>b.from.includes(h.kind)))continue;
+    if(b.cost.pedra-p.res.pedra===1&&p.res.moeda>=r+(b.cost.moeda||0)&&Object.entries(b.cost).every(([x,n])=>x==='pedra'||x==='moeda'||p.res[x]>=n)){trade(p,'moeda','pedra');break}
+  }
+}
+function botTurn(p){
+  if(S.phase!=='play'||cur()!==p)return;
+  let g=0;
+  while(p.hand.length&&g++<40){
+    const c=p.hand.find(c=>c.key==='ermitao')||p.hand.find(c=>DEFS[c.key].draw)||p.hand.find(c=>!DEFS[c.key].special)||p.hand[0];
+    playCard(p,c);
+    while((p.flags.exile||0)>0){
+      p.flags.exile--;
+      const t=p.hand.find(c=>c.key==='entulho')||(allCards(p).length>9&&p.hand.find(c=>c.key==='colono'));
+      if(t)exileCard(p,t);
+    }
+  }
+  const tgtScore=(h,bonus)=>{const o=S.players[h.owner];return boardPV(o)+hexPV(h)*2+bonus+rng()*2};
+  while((p.flags.burn||0)>0){
+    const ts=burnTargets(p);if(!ts.length)break;
+    ts.sort((a,b)=>tgtScore(b,0)-tgtScore(a,0));strike(p,ts[0],'burn');
+  }
+  while((p.flags.sab||0)>0){
+    const ts=sabTargets(p);if(!ts.length)break;
+    ts.sort((a,b)=>tgtScore(b,0)-tgtScore(a,0));strike(p,ts[0],'sab');
+  }
+  if(p.res.moeda>=2&&!p.flags.paidExile){
+    const t=p.hand.find(c=>c.key==='entulho');
+    if(t){p.res.moeda-=2;p.flags.paidExile=true;exileCard(p,t)}
+  }
+  botTrade(p);
+  for(let n=0;n<8;n++){
+    const opts=[];
+    for(const h of hexList()){
+      for(const k of BKINDS)if(canBuild(p,h,k))opts.push({h,k,v:buildVal(p,h,k)});
+    }
+    if(!opts.length)break;
+    opts.sort((a,b)=>b.v-a.v);
+    if(opts[0].v<.3)break;
+    build(p,opts[0].h,opts[0].k);
+  }
+  for(let n=0;n<2;n++){
+    const aff=S.market.filter(c=>DEFS[c.key].cost<=p.res.moeda);
+    if(!aff.length)break;
+    let best=null,bs=-99;
+    for(const c of aff){const s=buyScore(p,c);if(s>bs){bs=s;best=c}}
+    if(bs<2)break;
+    buy(p,best);
+  }
+  endTurn();
+}
+
+/* ===================== RENDER ===================== */
+const $=s=>document.querySelector(s);
+const ov=$('#ov');
+function effectHTML(d){
+  const parts=[];
+  if(d.gain)for(const r of RES)if(d.gain[r])parts.push(`<span class="gain">+${d.gain[r]} ${ic(r)}</span>`);
+  if(d.draw)parts.push(`<span class="gain">+${d.draw} carta${d.draw>1?'s':''}</span>`);
+  let h=parts.length?`<span class="gains">${parts.join('')}</span>`:'';
+  if(d.text)h+=`<span class="c-text">${d.text}</span>`;
+  return h;
+}
+function cardHTML(c,o={}){
+  const d=DEFS[c.key];
+  return `<button class="card t-${d.type}${o.mini?' mini':''}${o.dim?' dim':''}${o.zone==='hand'?' in-hand':''}" data-card="${c.id}" data-code="${CODE[c.key]}" data-zone="${o.zone||''}" ${o.disabled?'disabled':''}>
+    <span class="c-art"><img src="img/arte/${CODE[c.key]}.webp" alt="" loading="lazy"></span>
+    ${d.cost?`<span class="c-cost">${d.cost}${ic('moeda')}</span>`:''}
+    <span class="c-name">${d.name}</span>
+    <span class="c-eff">${effectHTML(d)}</span>
+    ${o.mini?'':`<span class="c-type">${TYPE_LABEL[d.type]}</span>`}
+  </button>`;
+}
+const PIECE={
+  settle:'M-10,9 L-10,-2 L0,-11 L10,-2 L10,9 Z',
+  shop:'M-12,9 L-12,-1 L-4,-9 L2,-3 L2,-10 L6,-10 L6,1 L12,1 L12,9 Z',
+  tower:'M-7,12 L-7,-7 L-9,-7 L-9,-14 L-5,-14 L-5,-11 L-2,-11 L-2,-14 L2,-14 L2,-11 L5,-11 L5,-14 L9,-14 L9,-7 L7,-7 L7,12 Z',
+  castle:'M-14,12 L-14,-8 L-15,-8 L-15,-14 L-11,-14 L-11,-11 L-8,-11 L-8,-14 L-5,-14 L-5,-4 L-3,-4 L-3,-16 L-4,-16 L-4,-21 L-1,-21 L-1,-18 L1,-18 L1,-21 L4,-21 L4,-16 L3,-16 L3,-4 L5,-4 L5,-14 L8,-14 L8,-11 L11,-11 L11,-14 L15,-14 L15,-8 L14,-8 L14,12 L4,12 L4,5 Q0,0 -4,5 L-4,12 Z',
+};
+function costHTML(c){return Object.entries(c).map(([r,n])=>r==='moeda'?`${n}${ic('moeda')}`:ic(r).repeat(n)).join('')}
+function hexPx(h){return[HS*Math.sqrt(3)*(h.q+h.r/2),HS*1.5*h.r]}
+function corner(x,y,i,s=HS){const a=Math.PI/180*(60*i-30);return[x+s*Math.cos(a),y+s*Math.sin(a)]}
+function validSet(){
+  const v=new Set(),p=me();
+  if(S.phase==='setup'){for(const h of hexList())if(canSettleAt(p,h,true))v.add(K(h.q,h.r))}
+  else if(myTurn()&&BKINDS.includes(S.mode)){for(const h of hexList())if(canBuild(p,h,S.mode))v.add(K(h.q,h.r))}
+  else if(myTurn()&&S.mode==='burn'){for(const h of burnTargets(p))v.add(K(h.q,h.r))}
+  else if(myTurn()&&S.mode==='sab'){for(const h of sabTargets(p))v.add(K(h.q,h.r))}
+  return v;
+}
+function renderMap(){
+  const valid=validSet();let fills='',seps='',marks='',hl='';
+  for(const h of hexList()){
+    const[x,y]=hexPx(h),k=K(h.q,h.r);
+    const pts=[0,1,2,3,4,5].map(i=>corner(x,y,i).map(n=>n.toFixed(1)).join(',')).join(' ');
+    if(locBonus(h))marks+=`<g class="bonus"><circle cx="${(x+15).toFixed(1)}" cy="${(y-17).toFixed(1)}" r="7.5"/><text x="${(x+15).toFixed(1)}" y="${(y-14).toFixed(1)}" text-anchor="middle">+${locBonus(h)}</text></g>`;
+    const tc=h.center?'T06':TILE_CODE[h.terrain],iw=Math.sqrt(3)*HS*968/898,ih=2*HS*1118/1037;
+    fills+=`<polygon points="${pts}" fill="${TERRAIN[h.terrain].fill}"/><image href="img/hex/${tc}.webp" x="${(x-iw/2).toFixed(1)}" y="${(y-ih/2).toFixed(1)}" width="${iw.toFixed(1)}" height="${ih.toFixed(1)}" preserveAspectRatio="none"/>`;
+    seps+=`<polygon class="hxs" points="${pts}"><title>${placeName(h)}</title></polygon>`;
+    if(h.owner!==null){
+      marks+=`<circle class="piece-bg" cx="${x.toFixed(1)}" cy="${(y-2).toFixed(1)}" r="16"/>`;
+      const col=S.players[h.owner].color;
+      if(h.wall)marks+=`<circle class="wall" cx="${x.toFixed(1)}" cy="${(y-3).toFixed(1)}" r="24"/>`;
+      marks+=`<path class="piece" d="${PIECE[h.kind]}" transform="translate(${x.toFixed(1)},${(y+1).toFixed(1)})" fill="${col}"/>`;
+      if(h.kind==='shop')marks+=`<use href="#i-${TERRAIN[h.terrain].icon}" x="${(x+3).toFixed(1)}" y="${(y-2).toFixed(1)}" width="11" height="11"/>`;
+    }
+    if(valid.has(k))hl+=`<polygon class="valid${S.mode==='burn'||S.mode==='sab'?' hostile':''}" data-k="${k}" points="${pts}"><title>${placeName(h)}</title></polygon>`;
+  }
+  $('#map').innerHTML=fills+seps+marks+hl;
+}
+function bannerText(){
+  if(S.phase==='setup')return'Clique num hexágono destacado na borda para fundar seu primeiro assentamento. Ele é gratuito e já põe uma carta de produção no seu baralho.';
+  if(S.phase==='over')return'Partida encerrada. Clique em Nova partida para jogar de novo.';
+  const p=cur();
+  if(p.bot)return`Vez de ${p.name}…`;
+  if(S.mode==='settle')return'Escolha onde fundar o assentamento (precisa ser vizinho de uma construção sua). Ruína custa 1 pedra a mais e vale +1 PV (Coração +2).';
+  if(S.mode==='tower')return'Torre: escolha um assentamento seu. Ele passa a valer 2 PV.';
+  if(S.mode==='shop')return'Oficina: escolha um assentamento seu. Ela vira Serraria, Moinho, Pedreira, Mercado ou Santuário, conforme o terreno, e põe a carta melhorada no seu baralho. Continua valendo 1 PV.';
+  if(S.mode==='castle')return'Castelo: escolha uma torre sua. Ela passa a valer 4 PV.';
+  if(S.mode==='wall')return'Muralha: escolha uma construção sua. Ela fica imune ao Incendiário e à Sabotadora.';
+  if(S.mode==='burn')return'Incendiário: clique num assentamento ou oficina rival (contorno vermelho) vizinho de você. Cancelar desperdiça o ataque.';
+  if(S.mode==='sab')return'Sabotadora: clique numa construção rival para rebaixá-la um nível. Cancelar desperdiça o ataque.';
+  if(S.mode==='exile')return(p.flags.exile>0?'Exílio grátis:':'Exílio por 2 moedas:')+' clique numa carta da mão para removê-la do jogo.';
+  return'Sua vez: jogue cartas, compre no mercado e construa. O que sobrar de recurso no fim do turno se perde.';
+}
+function renderTray(){
+  const p=me(),t=myTurn(),r=p.res;
+  const BTNS=[['settle','Assentamento',{madeira:1,grao:1}],['tower','Torre',BUILD.tower.cost],['shop','Oficina',BUILD.shop.cost],['castle','Castelo',BUILD.castle.cost],['wall','Muralha',WALL_COST]];
+  const bbtn=([k,nm,c])=>`<button class="btn${S.mode===k?' on':''}" data-act="b-${k}" ${(t&&hexList().some(h=>canBuild(p,h,k)))||S.mode===k?'':'disabled'}>${nm} ${costHTML(c)}</button>`;
+  const canX=t&&p.hand.length&&((p.flags.exile||0)>0||(r.moeda>=2&&!p.flags.paidExile));
+  const flags=[];
+  if(p.flags.carto)flags.push('<span class="flag">Cartógrafo: sem adjacência</span>');
+  if((p.flags.exile||0)>0)flags.push(`<span class="flag">Exílio grátis: ${p.flags.exile}</span>`);
+  if(p.flags.store)flags.push(`<span class="flag">Armazém: guarda ${p.flags.store}</span>`);
+  if(p.flags.trade2)flags.push('<span class="flag">Negociante: troca 2 por 1</span>');
+  const canTr=t&&RES.some(k=>r[k]>=tradeRate(p));
+  $('#tray').className='panel tray'+(S.mode==='exile'?' exiling':'');
+  $('#tray').innerHTML=`
+    ${S.news.length&&t?`<div class="news"><b>Enquanto você esperava</b>${S.news.map(n=>`<div>${n}</div>`).join('')}</div>`:''}
+    <div class="resbar">${RES.map(k=>`<span class="chip${r[k]?'':' zero'}" title="${RES_NAME[k]}">${ic(k)} ${r[k]}</span>`).join('')}${flags.join('')}</div>
+    <div class="actions">
+      <button class="btn" data-act="playall" ${t&&p.hand.some(c=>c.key!=='ermitao')?'':'disabled'} title="Joga todas, menos o Ermitão">Jogar todas</button>
+      <button class="btn${S.mode==='exile'?' on':''}" data-act="exile" ${canX||S.mode==='exile'?'':'disabled'}>Exilar ${(p.flags.exile||0)>0?'(grátis)':'(2 '+ic('moeda')+')'}</button>
+      <button class="btn" data-act="trade" ${canTr?'':'disabled'}>Trocar ${tradeRate(p)}:1</button>
+      ${S.mode?'<button class="btn" data-act="cancel">Cancelar</button>':''}
+      <span class="sep"></span>
+      <button class="btn main" data-act="end" ${t?'':'disabled'}>Encerrar turno</button>
+    </div>
+    <div class="actions build"><span class="lab">Construir</span>${BTNS.map(bbtn).join('')}</div>
+    <div class="lab">Em jogo</div>
+    <div class="cards">${p.play.length?p.play.map(c=>cardHTML(c,{mini:true,disabled:true})).join(''):'<span class="empty">Nenhuma carta jogada ainda.</span>'}</div>
+    <div class="lab">Sua mão <span class="cnt"><img class="backthumb" src="img/cartas/V01.webp" alt=""> Baralho ${p.deck.length} · Descarte ${p.discard.length} · Exiladas ${p.exiled}</span><button class="linkbtn" data-act="deck">ver todas as cartas</button></div>
+    <div class="cards">${p.hand.length?p.hand.map(c=>cardHTML(c,{zone:'hand',disabled:!t})).join(''):'<span class="empty">Mão vazia.</span>'}</div>`;
+}
+function renderSide(){
+  $('#when').innerHTML=S.phase==='setup'?'<b>Preparação</b>':`Primeiro a <b>${meta()} PV</b> no mapa`;
+  $('#players').innerHTML=S.players.map(p=>{
+    const bp=boardPV(p),cv=cardPV(p),pct=Math.min(100,bp/meta()*100);
+    const now=S.phase==='play'&&S.cur===p.i,ps=pieces(p.i);
+    const cnt=['castle','tower','shop'].map(k=>[k,ps.filter(h=>h.kind===k).length]).filter(x=>x[1]).map(([k,n])=>`${n} ${({castle:'castelo',tower:'torre',shop:'oficina'})[k]}${n>1?'s':''}`);
+    const walls=ps.filter(h=>h.wall).length;if(walls)cnt.push(`${walls} muralha${walls>1?'s':''}`);
+    return`<div class="pl${now?' now':''}"><span class="dot" style="background:${p.color}"></span><span class="nm">${p.name}${now?' · jogando':''}</span><span class="pv">${bp}</span>
+      <span class="bar"><span style="width:${pct}%;background:${p.color}"></span></span>
+      <span class="meta">${cv>=0?'+':''}${cv} em cartas de pontos no fim · ${ps.length} construções${cnt.length?` (${cnt.join(', ')})`:''} · ${allCards(p).length} cartas</span></div>`;
+  }).join('');
+  const t=myTurn();
+  $('#market').innerHTML=S.market.map(c=>{const a=DEFS[c.key].cost<=me().res.moeda;return cardHTML(c,{zone:'market',disabled:!t||!a,dim:t&&!a})}).join('')||'<span class="empty">Mercado esgotado.</span>';
+  $('#mkfoot').textContent=`${S.marketDeck.length} cartas restantes no baralho do mercado.`;
+  $('#log').innerHTML=S.log.map(l=>`<div>${l}</div>`).join('');
+}
+function renderPV(){
+  $('#pvtable').innerHTML=[['settle','Assentamento',1],['shop','Oficina',1],['tower','Torre',2],['castle','Castelo',4]].map(([k,n,v])=>`<div><svg viewBox="-16 -22 32 36" class="pvi"><path d="${PIECE[k]}"/></svg>${n}<b>${v} PV</b></div>`).join('')
+    +'<div class="note">Em Ruína: +1 PV · no Coração: +2 PV. Muralha não vale ponto, só protege.</div>';
+}
+function render(){$('#banner').textContent=bannerText();renderMap();renderTray();renderSide();renderPV()}
+
+/* ===================== OVERLAYS ===================== */
+function openOverlay(html){ov.innerHTML=`<div class="dlg" role="dialog" aria-modal="true">${html}</div>`;ov.hidden=false;const b=ov.querySelector('.foot .btn.main, .foot .btn');if(b)b.focus()}
+function closeOverlay(){ov.hidden=true;ov.innerHTML='';render()}
+function showModal(title,html,btn,cb){modalCb=cb;render();openOverlay(`<h2>${title}</h2>${html}<div class="foot"><button class="btn main" data-act="modalok">${btn}</button></div>`)}
+function openSetup(){
+  modalCb=null;
+  const n=S?S.nBots:2;
+  openOverlay(`<h2>Nova partida</h2><div class="form">
+    <div><div class="lab">Oponentes (bots)</div><div class="seg">${[1,2,3].map(k=>`<button class="btn${k===n?' on':''}" data-act="nb" data-n="${k}">${k}</button>`).join('')}</div></div>
+    <label for="seed">Semente do mapa (mesmo número = mesmo mapa)<input id="seed" type="number" value="${Math.floor(Math.random()*90000)+10000}"></label>
+  </div><div class="foot"><button class="btn" data-act="close">Cancelar</button><button class="btn main" data-act="start">Começar</button></div>`);
+  ov.dataset.nb=n;
+}
+function openRules(){
+  openOverlay(`<h2>Como jogar</h2>
+  <p>Você e os outros colonos reconstroem um continente arrasado. Cada pedaço de terra que você ocupa vira uma carta no seu baralho. Expandir rende pontos, mas engorda o baralho.</p>
+  <h3>Objetivo</h3>
+  <p>Ser o primeiro a chegar a <b>15 PV no mapa</b> (16 com 3 jogadores, 18 com 2). Quando alguém chega lá, a rodada termina para todos jogarem o mesmo número de turnos. Para compensar quem joga depois, no primeiro turno o 2º jogador recebe +1 moeda, e o 3º e o 4º recebem +2. Aí cada um soma as cartas de pontos do baralho, e ganha quem tiver mais. Desempate: mais construções.</p>
+  <h3>Seu turno</h3>
+  <ul><li><b>Jogue cartas</b> da mão para gerar moedas, madeira, grão e pedra.</li>
+  <li><b>Compre</b> cartas do mercado com moedas. Elas vão para o seu descarte.</li>
+  <li><b>Construa</b> com recursos, quantas vezes puder pagar.</li>
+  <li><b>Encerre</b>: mão e cartas jogadas vão para o descarte, recursos que sobraram se perdem e você compra 5 cartas.</li></ul>
+  <h3>Construções</h3>
+  <ul><li><b>Assentamento</b> (1 madeira + 1 grão): num hexágono vazio vizinho de uma construção sua. Você ganha a carta de produção do terreno: Floresta dá Bosque, Campo dá Lavoura, Colina dá Lavra, Vila dá Feira.</li>
+  <li><b>Ruína</b> custa 1 pedra a mais. Qualquer construção sua numa Ruína vale +1 PV (no Coração, o centro, +2). Você também ganha a carta Relíquia, que vale 1 PV no fim mas não faz nada na mão.</li>
+  <li><b>Torre</b> (1 pedra + 1 grão + 2 moedas): melhora um assentamento seu.</li>
+  <li><b>Oficina</b> (1 madeira + 1 pedra + 2 moedas): melhora um assentamento seu conforme o terreno e põe uma carta melhor no seu baralho. Floresta vira Serraria (+2 madeira), Campo vira Moinho (+2 grão), Colina vira Pedreira (+2 pedra), Vila vira Mercado (+3 moedas) e Ruína vira Santuário (+1 moeda, 2 PV no fim).</li>
+  <li><b>Castelo</b> (1 pedra + 1 madeira + 3 moedas): melhora uma torre sua.</li>
+  <li><b>Muralha</b> (1 pedra + 3 moedas): cerca qualquer construção sua. Ela fica imune ao Incendiário e à Sabotadora.</li>
+  <li>Cada hexágono tem uma construção só. Torre e Oficina são caminhos diferentes para o mesmo assentamento: pontos ou produção.</li></ul>
+  <h3>Pontos no mapa</h3>
+  <p>Assentamento 1 · Oficina 1 · Torre 2 · Castelo 4. Em Ruína +1, no Coração +2. Muralha não vale ponto. Os pontos são sempre o que está no mapa agora: se um ataque derruba sua construção, você perde os pontos dela.</p>
+  <h3>Troca</h3>
+  <p>A qualquer momento do seu turno, entregue 3 recursos iguais para receber 1 de outro tipo. Com o Negociante, a troca é 2 por 1.</p>
+  <h3>Ataques e defesa</h3>
+  <ul><li><b>Saqueadora</b>: cada oponente descarta 1 carta aleatória da mão que ia jogar.</li>
+  <li><b>Incendiário</b>: remove um assentamento ou oficina rival vizinho de uma construção sua. O hexágono fica livre, e o dono continua com as cartas que ganhou.</li>
+  <li><b>Sabotadora</b>: rebaixa uma construção rival um nível. Castelo vira torre; torre ou oficina vira assentamento.</li>
+  <li>Construções com <b>Muralha</b> não podem ser alvo desses dois ataques.</li>
+  <li><b>Tempestade de Cinzas</b>: cada oponente põe 1 Entulho no descarte. O Entulho não faz nada e vale −1 PV no fim. Há 12 no jogo.</li>
+  <li><b>Guarda</b>: sua mão fica visível para ataques durante os turnos dos outros. Se a Guarda estiver nela, todo ataque contra você é bloqueado. No seu turno você pode jogá-la normalmente.</li></ul>
+  <h3>Armazém</h3>
+  <p>No fim do turno, guarda até 2 recursos que sobraram, na ordem pedra, grão, madeira e moeda.</p>
+  <h3>Exílio</h3>
+  <p>Uma vez por turno, pague 2 moedas para exilar uma carta da mão. O Ermitão faz isso de graça. Use para tirar cartas fracas e manter o baralho afiado.</p>
+  <h3>Fim</h3>
+  <p>Terminada a rodada em que alguém chegou à meta, some os pontos do mapa e as cartas de pontos de todo o seu baralho: Monumento 3, Santuário 2, Relíquia 1, Entulho −1.</p>
+  <div class="foot"><button class="btn main" data-act="close">Fechar</button></div>`);
+}
+function openTrade(){
+  const p=me(),r=tradeRate(p);
+  const row=(act,lbl,need)=>`<div><div class="lab">${lbl}</div><div class="seg">${RES.map(k=>`<button class="btn" data-act="${act}" data-r="${k}" ${need&&p.res[k]<r?'disabled':''}>${ic(k)} ${RES_NAME[k]}${need?` (${p.res[k]})`:''}</button>`).join('')}</div></div>`;
+  openOverlay(`<h2>Troca com o mercado</h2><p>Entregue ${r} recursos iguais e receba 1 de outro tipo. O Negociante baixa a troca para 2 por 1 neste turno.</p>
+  <div class="form">${row('tg',`Entregar ${r}`,true)}${row('tr','Receber 1',false)}</div>
+  <div class="foot"><button class="btn" data-act="close">Cancelar</button><button class="btn main" data-act="dotrade" disabled>Trocar</button></div>`);
+  delete ov.dataset.give;delete ov.dataset.get;
+}
+function openNews(){
+  openOverlay(`<img src="img/cartas/V01.webp" alt="" style="float:right;width:120px;border-radius:8px;margin:0 0 10px 14px">
+  <h2>Novidades da v0.5</h2>
+  <p>Partida mais simples: acabaram as eras, as regiões e o limite de rodadas.</p>
+  <ul>
+  <li><b>Meta:</b> o primeiro a chegar a 15 PV no mapa encerra a partida (16 com 3 jogadores, 18 com 2). A rodada termina para todos, e aí entram as cartas de pontos.</li>
+  <li><b>Pontos direto no mapa:</b> Assentamento 1, Oficina 1, Torre 2, Castelo 4. Em Ruína +1, no Coração +2.</li>
+  <li><b>Pedágio</b> agora dá +1 moeda por torre ou castelo seu.</li>
+  <li>No primeiro turno, o 2º jogador recebe +1 moeda, e o 3º e o 4º recebem +2, para compensar quem joga depois.</li>
+  </ul>
+  <h3>Da v0.4</h3>
+  <p>Oficina, Castelo e Muralha. A Sabotadora rebaixa qualquer construção um nível.</p>
+  <h3>Da v0.3</h3>
+  <p>Arte nova nos hexágonos e nas cartas. Passe o mouse sobre uma carta para ver a versão completa.</p>
+  <h3>Da v0.2</h3>
+  <p>Agora dá para atrapalhar os amigos. Cartas de ataque têm moldura vermelha.</p>
+  <ul>
+  <li><b>Saqueadora</b> (4): cada oponente descarta 1 carta aleatória da mão.</li>
+  <li><b>Incendiário</b> (5): destrua um assentamento rival vizinho de você.</li>
+  <li><b>Sabotadora</b> (4): rebaixe uma construção rival um nível.</li>
+  <li><b>Tempestade de Cinzas</b> (5): cada oponente recebe 1 Entulho, carta inútil que vale −1 PV.</li>
+  <li><b>Guarda</b> (3): se estiver na sua mão quando te atacarem, bloqueia o ataque.</li>
+  <li><b>Cobradora</b>, <b>Armazém</b> e <b>Negociante</b>: recuperação para quem está atrás, guardar recursos e trocas melhores.</li>
+  <li>Botão <b>Trocar 3:1</b>, como o porto do Catan.</li>
+  <li>O mercado mostra 6 cartas, e um quadro avisa o que te atacaram enquanto você esperava.</li>
+  </ul>
+  <div class="foot"><button class="btn" data-act="rules">Ver regras completas</button><button class="btn main" data-act="close">Jogar</button></div>`);
+}
+function openDeck(){
+  const p=me(),g={};
+  for(const c of allCards(p))g[c.key]=(g[c.key]||0)+1;
+  const rows=Object.entries(g).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<tr><td>${DEFS[k].name}</td><td>${TYPE_LABEL[DEFS[k].type]}</td><td>${n}</td></tr>`).join('');
+  openOverlay(`<h2>Suas cartas</h2><p>${allCards(p).length} cartas no total, contando baralho, mão, descarte e jogadas. ${p.exiled} exiladas.</p>
+  <div class="tbl"><table><thead><tr><th>Carta</th><th>Tipo</th><th>Qtd.</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="foot"><button class="btn main" data-act="close">Fechar</button></div>`);
+}
+
+/* ===================== EVENTOS ===================== */
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]');
+  if(a){
+    const act=a.dataset.act,p=me();
+    if(act==='rules')return openRules();
+    if(act==='setup')return openSetup();
+    if(act==='close')return closeOverlay();
+    if(act==='deck')return openDeck();
+    if(act==='nb'){ov.dataset.nb=a.dataset.n;ov.querySelectorAll('[data-act=nb]').forEach(b=>b.classList.toggle('on',b===a));return}
+    if(act==='start'){const nb=+ov.dataset.nb||2,sd=parseInt($('#seed').value,10)||1;ov.hidden=true;ov.innerHTML='';newGame(nb,sd);return}
+    if(act==='modalok'){ov.hidden=true;ov.innerHTML='';const cb=modalCb;modalCb=null;if(cb)cb();else render();return}
+    if(!myTurn())return;
+    if(act==='playall'){for(const c of [...p.hand])if(c.key!=='ermitao'&&c.key!=='entulho')playCard(p,c);S.mode=pendingMode(p)}
+    if(act.startsWith('b-')){const k=act.slice(2);S.mode=S.mode===k?null:k}
+    if(act==='exile')S.mode=S.mode==='exile'?null:'exile';
+    if(act==='cancel'){if(S.mode==='exile')p.flags.exile=0;if(S.mode==='burn')p.flags.burn=0;if(S.mode==='sab')p.flags.sab=0;S.mode=pendingMode(p)}
+    if(act==='trade')return openTrade();
+    if(act==='tg'||act==='tr'){
+      const row=act==='tg'?'give':'get';ov.dataset[row]=a.dataset.r;
+      ov.querySelectorAll(`[data-act=${act}]`).forEach(b=>b.classList.toggle('on',b===a));
+      const g=ov.dataset.give,w=ov.dataset.get,ok=ov.querySelector('[data-act=dotrade]');
+      ok.disabled=!(g&&w&&g!==w&&p.res[g]>=tradeRate(p));return;
+    }
+    if(act==='dotrade'){trade(p,ov.dataset.give,ov.dataset.get);closeOverlay();return}
+    if(act==='end'){endTurn();return}
+    render();return;
+  }
+  const cd=e.target.closest('[data-card]');
+  if(cd&&myTurn()){
+    const p=me(),id=+cd.dataset.card;
+    if(cd.dataset.zone==='hand'){
+      const c=p.hand.find(x=>x.id===id);if(!c)return;
+      if(S.mode==='exile'){
+        if((p.flags.exile||0)>0)p.flags.exile--;
+        else{if(p.res.moeda<2||p.flags.paidExile)return;p.res.moeda-=2;p.flags.paidExile=true}
+        exileCard(p,c);S.mode=pendingMode(p);
+      }else if(S.mode!=='burn'&&S.mode!=='sab'){
+        playCard(p,c);
+        S.mode=pendingMode(p)||(BKINDS.includes(S.mode)?S.mode:null);
+      }
+    }else if(cd.dataset.zone==='market'){
+      const c=S.market.find(x=>x.id===id);
+      if(c&&DEFS[c.key].cost<=p.res.moeda)buy(p,c);
+    }
+    render();return;
+  }
+  const hx=e.target.closest('#map [data-k]');
+  if(hx){
+    const h=S.hexes[hx.dataset.k];
+    if(S.phase==='setup'&&canSettleAt(me(),h,true))return setupPlace(h);
+    if(!myTurn())return;
+    if(BKINDS.includes(S.mode)&&canBuild(me(),h,S.mode)){const k=S.mode;build(me(),h,k);if(!hexList().some(x=>canBuild(me(),x,k)))S.mode=null}
+    else if(S.mode==='burn'&&burnTargets(me()).includes(h)){strike(me(),h,'burn');S.mode=pendingMode(me())}
+    else if(S.mode==='sab'&&sabTargets(me()).includes(h)){strike(me(),h,'sab');S.mode=pendingMode(me())}
+    render();
+  }
+});
+const zoom=$('#zoom'),canHover=matchMedia('(hover:hover)').matches;
+document.addEventListener('mouseover',e=>{
+  if(!canHover)return;
+  const c=e.target.closest('[data-code]');
+  if(c&&ov.hidden){zoom.querySelector('img').src=`img/cartas/${c.dataset.code}.webp`;zoom.hidden=false}
+  else zoom.hidden=true;
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ov.hidden&&!modalCb&&ov.querySelector('[data-act=close]'))closeOverlay()});
+
+newGame(2,Math.floor(Math.random()*90000)+10000);
+openNews();
+</script>
+
+</body></html>

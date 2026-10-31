@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Terra Fértil · Regras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@500;700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: livro de regras em coluna única de leitura (68ch), com faixas largas para galerias;
+   capa em verde-escuro da marca, miolo em "pergaminho" derivado do painel das cartas; versão escura segue o jogo digital */
+:root{
+  --bg:#ebe3cc; --paper:#f6efdc; --paper2:#e7dabb; --ink:#2b2419; --muted:#6f6452; --line:#cdbf9d;
+  --accent:#8f6b25; --accent-fill:#e2a93b; --accent-ink:#1c1507;
+  --hero-bg:#16281f; --hero-bg2:#0b1610; --hero-ink:#ebe6d6; --hero-gold:#f1d27a;
+  --green:#2f5a33; --red:#8a3330; --purple:#43337a; --on-color:#fff;
+  --display:'Alegreya SC', Georgia, 'Times New Roman', serif;
+  --body:'Alegreya Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a19; --paper:#1b2321; --paper2:#222c29; --ink:#ebe6d6; --muted:#9aa59f; --line:#2f3b37;
+  --accent:#e2a93b; --accent-fill:#e2a93b; --accent-ink:#1c1507; --green:#4d7d45; --red:#c25a55; --purple:#9d83e0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141a19; --paper:#1b2321; --paper2:#222c29; --ink:#ebe6d6; --muted:#9aa59f; --line:#2f3b37;
+  --accent:#e2a93b; --accent-fill:#e2a93b; --accent-ink:#1c1507; --green:#4d7d45; --red:#c25a55; --purple:#9d83e0; color-scheme:dark}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--hero-bg2)}
+img{max-width:100%;display:block}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--display);font-weight:700;line-height:1.1;text-wrap:balance;margin:0}
+h2{font-size:34px;color:var(--accent);margin:0 0 6px}
+h3{font-size:22px;font-weight:500;margin:26px 0 8px}
+p{margin:8px 0;max-width:68ch}
+ul,ol{margin:8px 0;padding-left:22px;max-width:68ch}
+li{margin:4px 0}
+b{font-weight:700}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.ic{width:1.05em;height:1.05em;vertical-align:-.17em;display:inline-block}
+.ic.big{width:1.5em;height:1.5em;vertical-align:-.4em}
+.nowrap{white-space:nowrap}
+.cost{white-space:nowrap;font-weight:700}
+.cost .ic{margin-right:1px}
+.ok{color:var(--green);font-weight:700}
+
+/* capa */
+.hero{background:radial-gradient(90% 80% at 30% 40%,var(--hero-bg) 0%,var(--hero-bg2) 100%);color:var(--hero-ink)}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:center;padding-block:34px 30px}
+.hero h1{font-size:clamp(44px,8vw,78px);color:var(--hero-gold);letter-spacing:.02em;text-shadow:0 4px 18px rgba(0,0,0,.6)}
+.hero .tag{font-size:15px;letter-spacing:.32em;text-transform:uppercase;color:var(--hero-ink);opacity:.85;margin:4px 0 16px}
+.hero .lead{font-size:19px;max-width:56ch;color:var(--hero-ink)}
+.hero .facts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.hero .facts .play{background:var(--hero-gold);color:#1c1507;border-radius:999px;padding:5px 16px;font-size:15px;font-weight:700;text-decoration:none}
+.hero .facts span{border:1px solid rgba(241,210,122,.5);color:var(--hero-gold);border-radius:999px;padding:5px 14px;font-size:15px}
+.hero .emblem{width:300px;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+@media (max-width:760px){.hero .wrap{grid-template-columns:1fr}.hero .emblem{width:min(220px,60vw);margin:0 auto}}
+
+/* navegação */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--hero-bg2);border-bottom:1px solid rgba(241,210,122,.25)}
+.nav .wrap{display:flex;gap:4px 18px;overflow-x:auto;padding-block:10px;scrollbar-width:none}
+.nav .wrap::-webkit-scrollbar{display:none}
+.nav a{color:var(--hero-ink);text-decoration:none;font-size:14px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;opacity:.85;padding:2px 0}
+.nav a:hover{color:var(--hero-gold);opacity:1}
+
+/* seções */
+section{padding-block:40px 10px}
+section + section{border-top:1px solid var(--line)}
+.eyebrow{font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px 28px;align-items:start}
+.card-box{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.card-box h3{margin-top:0}
+.callout{background:var(--paper2);border-left:5px solid var(--accent-fill);border-radius:0 10px 10px 0;padding:12px 16px;margin:16px 0;max-width:72ch}
+.callout p{margin:4px 0}
+.steps{counter-reset:s;list-style:none;padding:0;max-width:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:14px;align-items:start;padding:12px 0;border-top:1px dashed var(--line)}
+.steps li:first-child{border-top:none}
+.steps li::before{content:counter(s);font-family:var(--display);font-weight:700;font-size:22px;width:40px;height:40px;border-radius:50%;background:var(--accent-fill);color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
+.steps b.t{display:block;font-family:var(--display);font-size:19px;font-weight:700;margin-bottom:2px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+td.num,th.num{text-align:right}
+.tbl{overflow-x:auto;margin:10px 0}
+.pv{display:inline-block;min-width:2.3em;text-align:center;background:var(--purple);color:var(--on-color);font-family:var(--display);font-weight:700;border-radius:999px;padding:1px 9px;white-space:nowrap}
+.piece{width:38px;height:40px;fill:var(--ink)}
+.bld{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.bld .card-box{display:grid;grid-template-columns:48px 1fr;gap:6px 12px;align-items:start}
+.bld .card-box h3{grid-column:2;margin:0;font-size:21px}
+.bld .card-box .piece{grid-row:1 / span 3;margin-top:2px}
+.bld .card-box p{grid-column:2;margin:2px 0;font-size:15.5px}
+.bld .meta{grid-column:2;display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:15px}
+.fig{margin:18px 0}
+.fig img{border-radius:12px;border:1px solid var(--line)}
+.fig figcaption{font-size:14px;color:var(--muted);margin-top:6px}
+.terr{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:14px}
+.terr figure{margin:0;text-align:center}
+.terr img{width:min(150px,100%);margin:0 auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
+.terr figcaption{font-size:14.5px;margin-top:6px;line-height:1.3}
+.terr figcaption b{font-family:var(--display);font-size:17px;display:block}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gal figure{margin:0}
+.gal img{border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.35);width:100%;aspect-ratio:815/1110;background:var(--paper2)}
+.gal figcaption{font-size:14px;margin-top:4px;display:flex;justify-content:space-between;gap:6px}
+.gal figcaption b{font-family:var(--display)}
+.gal figcaption span{color:var(--muted);font-variant-numeric:tabular-nums}
+.atk{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.atk figure{margin:0;display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:start}
+.atk img{border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,.35);width:96px;aspect-ratio:815/1110;background:var(--paper2)}
+.atk b.t{font-family:var(--display);font-size:19px;display:block}
+.atk p{margin:2px 0;font-size:15.5px}
+.ref{background:var(--hero-bg);color:var(--hero-ink);border-radius:14px;padding:22px 24px;margin:12px 0 30px}
+.ref h3{color:var(--hero-gold);margin:0 0 10px}
+.ref .cols{gap:14px 28px}
+.ref ul{padding-left:18px;margin:0}
+.ref li{font-size:15.5px}
+.ref b{color:var(--hero-gold)}
+.ref .cost{color:var(--hero-ink)}
+.suits{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px 28px}
+.suit h3{display:flex;align-items:center;gap:8px;margin-top:8px}
+.suit .s{font-size:28px;line-height:1}
+.suit .r{color:var(--red)}
+footer{padding:30px 0 50px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth;scroll-padding-top:60px}
+@media print{.nav{display:none}.hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}section{break-inside:avoid-page}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="g-coin" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff2bf"/><stop offset=".45" stop-color="#e7b743"/><stop offset="1" stop-color="#9c6b14"/></radialGradient>
+    <linearGradient id="g-log" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9824d"/><stop offset="1" stop-color="#6e4422"/></linearGradient>
+    <radialGradient id="g-ring" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#f2d7a6"/><stop offset=".7" stop-color="#d9b179"/><stop offset="1" stop-color="#8a5a2c"/></radialGradient>
+    <linearGradient id="g-wheat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe489"/><stop offset="1" stop-color="#c79a2a"/></linearGradient>
+    <linearGradient id="g-crys" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6dcff"/><stop offset=".5" stop-color="#9d83e0"/><stop offset="1" stop-color="#4c3a8c"/></linearGradient>
+  </defs>
+  <symbol id="i-moeda" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="url(#g-coin)" stroke="#6e4c10" stroke-width="2.2"/><circle cx="20" cy="20" r="11.5" fill="none" stroke="#8a6214" stroke-width="1.6" opacity=".8"/><path d="M20 27v-9M20 18c-3-4-7-3-7-3s0 5 7 3zM20 21c3-4 7-3 7-3s0 5-7 3z" fill="#9a6d16" stroke="#7a5512" stroke-width="1"/></symbol>
+  <symbol id="i-madeira" viewBox="0 0 40 40"><rect x="3" y="7" width="31" height="11" rx="5.5" fill="url(#g-log)" stroke="#4a2c12" stroke-width="1.5"/><rect x="6" y="21" width="31" height="11" rx="5.5" fill="url(#g-log)" stroke="#4a2c12" stroke-width="1.5"/><ellipse cx="29" cy="12.5" rx="4.6" ry="5" fill="url(#g-ring)" stroke="#4a2c12" stroke-width="1.3"/><ellipse cx="32" cy="26.5" rx="4.6" ry="5" fill="url(#g-ring)" stroke="#4a2c12" stroke-width="1.3"/></symbol>
+  <symbol id="i-grao" viewBox="0 0 40 40"><path d="M20 38V9M15 38l4-14M25 38l-4-14" stroke="#9a7a22" stroke-width="2" fill="none" stroke-linecap="round"/><g fill="url(#g-wheat)" stroke="#8a6a1a" stroke-width="1"><ellipse cx="20" cy="6.5" rx="3" ry="4.5"/><ellipse cx="15.5" cy="12" rx="2.8" ry="4.3" transform="rotate(-28 15.5 12)"/><ellipse cx="24.5" cy="12" rx="2.8" ry="4.3" transform="rotate(28 24.5 12)"/><ellipse cx="15.5" cy="19" rx="2.8" ry="4.3" transform="rotate(-28 15.5 19)"/><ellipse cx="24.5" cy="19" rx="2.8" ry="4.3" transform="rotate(28 24.5 19)"/><ellipse cx="15.5" cy="26" rx="2.8" ry="4.3" transform="rotate(-28 15.5 26)"/><ellipse cx="24.5" cy="26" rx="2.8" ry="4.3" transform="rotate(28 24.5 26)"/></g></symbol>
+  <symbol id="i-pedra" viewBox="0 0 40 40"><polygon points="4,31 9,13 21,5 34,12 37,30 25,36" fill="#9aa1a6" stroke="#4d5358" stroke-width="1.8" stroke-linejoin="round"/><polygon points="9,13 21,5 22,18" fill="#c7cdd1"/><polygon points="21,5 34,12 22,18" fill="#b2b9be"/><polygon points="22,18 34,12 37,30 25,36" fill="#7d858b"/><polygon points="4,31 9,13 22,18 25,36" fill="#8f979c"/><path d="M9 13L22 18L25 36M22 18L34 12" stroke="#4d5358" stroke-width="1.2" fill="none"/></symbol>
+  <symbol id="i-reliq" viewBox="0 0 40 40"><polygon points="20,3 26,15 20,37 14,15" fill="url(#g-crys)" stroke="#3a2b6e" stroke-width="1.5" stroke-linejoin="round"/><polygon points="9,14 14,20 12,36 6,24" fill="url(#g-crys)" stroke="#3a2b6e" stroke-width="1.4" stroke-linejoin="round"/><polygon points="31,12 35,22 29,36 27,21" fill="url(#g-crys)" stroke="#3a2b6e" stroke-width="1.4" stroke-linejoin="round"/><rect x="4" y="34" width="32" height="4" rx="2" fill="#5e5a52"/></symbol>
+  <symbol id="i-carta" viewBox="0 0 30 40"><rect x="7" y="2" width="21" height="30" rx="3" fill="#cfc2a0" stroke="#5a4e38" stroke-width="1.6"/><rect x="2" y="7" width="21" height="30" rx="3" fill="#f3ead2" stroke="#5a4e38" stroke-width="1.6"/><path d="M8 17h9M8 22h9M8 27h6" stroke="#8a7a5a" stroke-width="1.6"/></symbol>
+  <symbol id="p-settle" viewBox="-16 -22 32 36"><path d="M-10,9 L-10,-2 L0,-11 L10,-2 L10,9 Z"/></symbol>
+  <symbol id="p-shop" viewBox="-16 -22 32 36"><path d="M-12,9 L-12,-1 L-4,-9 L2,-3 L2,-10 L6,-10 L6,1 L12,1 L12,9 Z"/></symbol>
+  <symbol id="p-tower" viewBox="-16 -22 32 36"><path d="M-7,12 L-7,-7 L-9,-7 L-9,-14 L-5,-14 L-5,-11 L-2,-11 L-2,-14 L2,-14 L2,-11 L5,-11 L5,-14 L9,-14 L9,-7 L7,-7 L7,12 Z"/></symbol>
+  <symbol id="p-castle" viewBox="-17 -23 34 37"><path d="M-14,12 L-14,-8 L-15,-8 L-15,-14 L-11,-14 L-11,-11 L-8,-11 L-8,-14 L-5,-14 L-5,-4 L-3,-4 L-3,-16 L-4,-16 L-4,-21 L-1,-21 L-1,-18 L1,-18 L1,-21 L4,-21 L4,-16 L3,-16 L3,-4 L5,-4 L5,-14 L8,-14 L8,-11 L11,-11 L11,-14 L15,-14 L15,-8 L14,-8 L14,12 L4,12 L4,5 Q0,0 -4,5 L-4,12 Z"/></symbol>
+  <symbol id="p-wall" viewBox="-16 -22 32 36"><circle cx="0" cy="-2" r="13" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="5 3"/></symbol>
+</svg>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Terra Fértil</h1>
+      <div class="tag">Reconstrua o mundo</div>
+      <p class="lead">Um continente arrasado espera por novos colonos. Cada pedaço de terra que você ocupa vira uma carta no seu baralho, e cada construção vale pontos no mapa. Expanda, melhore o seu baralho, atrapalhe os vizinhos e seja o primeiro a chegar à meta.</p>
+      <div class="facts"><a class="play" href="jogar.html">Jogar a versão digital →</a><span>2 a 4 jogadores</span><span>cerca de 60 minutos</span><span>deckbuilding + mapa de hexágonos</span></div>
+    </div>
+    <img class="emblem" src="img/arte/V01.webp" alt="Emblema do jogo: um broto verde nascendo de uma pedra antiga, cercado por espigas douradas">
+  </div>
+</header>
+
+<nav class="nav" aria-label="Seções">
+  <div class="wrap">
+    <a href="#objetivo">Objetivo</a><a href="#componentes">Componentes</a><a href="#preparacao">Preparação</a><a href="#turno">O turno</a><a href="#construcoes">Construções</a><a href="#terrenos">Terrenos</a><a href="#pontos">Pontos e fim</a><a href="#ataques">Ataques</a><a href="#outras">Outras regras</a><a href="#cartas">Cartas</a><a href="#baralho">Com baralho comum</a><a href="#resumo">Resumo</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="objetivo">
+  <div class="eyebrow">Visão geral</div>
+  <h2>Objetivo</h2>
+  <p>Seja o <b>primeiro a somar a meta de pontos no mapa</b>: <b>15 PV</b> com 4 jogadores, <b>16 PV</b> com 3 e <b>18 PV</b> com 2. Os pontos vêm das suas construções: cada assentamento, oficina, torre e castelo no mapa vale pontos enquanto estiver de pé.</p>
+  <p>Quando alguém chega à meta, a rodada termina para que todos joguem o mesmo número de turnos. Então cada jogador soma às construções as <b>cartas de pontos</b> do seu baralho. Quem tiver mais pontos vence.</p>
+  <div class="callout">
+    <p><b>O gancho do jogo:</b> toda vez que você constrói um assentamento, a carta de produção daquele terreno entra no seu baralho. O território alimenta o baralho, e o baralho paga o território. Expandir demais, porém, enche o baralho de cartas fracas. Saber a hora de parar, melhorar e exilar é metade da partida.</p>
+  </div>
+</section>
+
+<section id="componentes">
+  <div class="eyebrow">O que vem na caixa</div>
+  <h2>Componentes</h2>
+  <div class="cols">
+    <div class="card-box">
+      <h3>37 hexágonos de terreno</h3>
+      <ul>
+        <li>9 Florestas, 9 Campos, 7 Colinas, 6 Vilas, 5 Ruínas</li>
+        <li>1 Coração, a praça da cidade antiga que fica no centro do mapa</li>
+      </ul>
+    </div>
+    <div class="card-box">
+      <h3>165 cartas</h3>
+      <ul>
+        <li>40 cartas iniciais (10 por jogador)</li>
+        <li>58 cartas de mercado</li>
+        <li>37 cartas de produção e 18 de oficina</li>
+        <li>12 cartas de Entulho</li>
+      </ul>
+    </div>
+    <div class="card-box">
+      <h3>Peças de cada jogador <span class="nowrap">(4 cores)</span></h3>
+      <ul>
+        <li>10 assentamentos (as vilinhas)</li>
+        <li>4 oficinas, 4 torres e 2 castelos</li>
+        <li>2 muralhas</li>
+      </ul>
+    </div>
+    <div class="card-box">
+      <h3>Recursos</h3>
+      <p>Marcadores de <b>moeda</b> <svg class="ic"><use href="#i-moeda"/></svg>, <b>madeira</b> <svg class="ic"><use href="#i-madeira"/></svg>, <b>grão</b> <svg class="ic"><use href="#i-grao"/></svg> e <b>pedra</b> <svg class="ic"><use href="#i-pedra"/></svg>, numa reserva comum. Eles duram só o turno em que foram gerados.</p>
+    </div>
+  </div>
+  <figure class="fig">
+    <img src="img/3d/pecas.webp" alt="As cinco peças de construção: vilinha, oficina com roda d'água, torre, castelo e anel de muralha">
+    <figcaption>As peças de construção: assentamento, oficina, torre, castelo e muralha.</figcaption>
+  </figure>
+</section>
+
+<section id="preparacao">
+  <div class="eyebrow">Antes de começar</div>
+  <h2>Preparação</h2>
+  <ol class="steps">
+    <li><div><b class="t">Monte o mapa</b>Coloque o <b>Coração</b> no centro da mesa. Embaralhe os outros 36 hexágonos com a face para baixo e distribua-os em três anéis em volta do Coração: 6 no primeiro anel, 12 no segundo e 18 no terceiro. Vire todos para cima.</div></li>
+    <li><div><b class="t">Separe as pilhas de produção</b>Deixe ao lado do mapa, separadas por tipo, as cartas de <b>Bosque, Lavoura, Lavra, Feira e Relíquia</b> e as cinco cartas de oficina (<b>Serraria, Moinho, Pedreira, Mercado e Santuário</b>). Ninguém compra essas cartas: você as ganha ao construir.</div></li>
+    <li><div><b class="t">Prepare o mercado</b>Embaralhe as 58 cartas de mercado e abra <b>6 cartas</b> em fila. Deixe os 12 <b>Entulhos</b> numa pilha à parte.</div></li>
+    <li><div><b class="t">Monte o seu baralho inicial</b>Cada jogador recebe <b>5 Colonos, 2 Lenhadores, 2 Agricultoras e 1 Pedreiro</b>, embaralha e compra <b>5 cartas</b>. Pegue também as peças da sua cor.</div></li>
+    <li><div><b class="t">Funde o primeiro assentamento</b>O jogador mais novo começa. Em ordem de jogo, cada jogador coloca <b>um assentamento grátis</b> num hexágono vazio da <b>borda</b> do mapa e pega a carta de produção daquele terreno para o descarte. Tudo o que você construir depois precisa ser vizinho de algo seu.</div></li>
+    <li><div><b class="t">Compense quem joga depois</b>No primeiro turno, o <b>2º jogador recebe 1 moeda</b> extra, e o <b>3º e o 4º recebem 2 moedas</b>. É o suficiente para equilibrar a vantagem de quem abre a partida.</div></li>
+  </ol>
+</section>
+
+<section id="turno">
+  <div class="eyebrow">Como se joga</div>
+  <h2>O turno</h2>
+  <p>No seu turno, faça as ações abaixo <b>na ordem que quiser</b> e quantas vezes conseguir pagar. Recursos gerados ficam numa pilha à sua frente até o fim do turno.</p>
+  <ol class="steps">
+    <li><div><b class="t">Jogue cartas</b>Jogue cartas da mão, uma a uma, e pegue da reserva os recursos que elas geram. Algumas cartas fazem outra coisa: compram cartas, atacam, trocam. Você pode jogar todas ou guardar alguma, como a Guarda.</div></li>
+    <li><div><b class="t">Compre no mercado</b>Pague o custo em <svg class="ic"><use href="#i-moeda"/></svg> de uma carta aberta e coloque-a no seu <b>descarte</b>. Reponha a fila com a carta de cima do baralho do mercado.</div></li>
+    <li><div><b class="t">Construa</b>Pague os recursos e coloque ou melhore uma peça no mapa (veja <a href="#construcoes">Construções</a>). Se a construção dá uma carta, ela vai para o seu descarte.</div></li>
+    <li><div><b class="t">Troque e exile, se quiser</b>A qualquer momento, entregue 3 recursos iguais por 1 de outro tipo. Uma vez por turno, pague 2 <svg class="ic"><use href="#i-moeda"/></svg> para <b>exilar</b> uma carta da mão, tirando-a do jogo.</div></li>
+    <li><div><b class="t">Encerre</b>Devolva os recursos que sobraram à reserva (eles se perdem). Coloque a mão e as cartas jogadas no descarte e <b>compre 5 cartas</b>. Quando o baralho acabar, embaralhe o descarte para formar um novo.</div></li>
+  </ol>
+</section>
+
+<section id="construcoes">
+  <div class="eyebrow">Cinco jeitos de ocupar a terra</div>
+  <h2>Construções</h2>
+  <p>Cada hexágono comporta <b>uma construção</b>. O assentamento é a base de tudo; torre e oficina são dois caminhos diferentes para o mesmo assentamento, <b>pontos ou produção</b>, e o castelo é o topo do caminho dos pontos. A muralha é um anel que se coloca em volta de qualquer construção sua.</p>
+  <div class="bld">
+    <div class="card-box">
+      <svg class="piece"><use href="#p-settle"/></svg>
+      <h3>Assentamento</h3>
+      <div class="meta"><span class="cost"><svg class="ic"><use href="#i-madeira"/></svg><svg class="ic"><use href="#i-grao"/></svg></span><span class="pv">1 PV</span></div>
+      <p>Num hexágono vazio <b>vizinho de uma construção sua</b>. Você ganha a carta de produção do terreno. Em Ruína e no Coração, custa <svg class="ic"><use href="#i-pedra"/></svg> a mais.</p>
+    </div>
+    <div class="card-box">
+      <svg class="piece"><use href="#p-shop"/></svg>
+      <h3>Oficina</h3>
+      <div class="meta"><span class="cost"><svg class="ic"><use href="#i-madeira"/></svg><svg class="ic"><use href="#i-pedra"/></svg> 2<svg class="ic"><use href="#i-moeda"/></svg></span><span class="pv">1 PV</span></div>
+      <p>Substitui um <b>assentamento</b> seu. Você ganha a carta de oficina do terreno, que produz o dobro: Serraria, Moinho, Pedreira, Mercado ou Santuário.</p>
+    </div>
+    <div class="card-box">
+      <svg class="piece"><use href="#p-tower"/></svg>
+      <h3>Torre</h3>
+      <div class="meta"><span class="cost"><svg class="ic"><use href="#i-pedra"/></svg><svg class="ic"><use href="#i-grao"/></svg> 2<svg class="ic"><use href="#i-moeda"/></svg></span><span class="pv">2 PV</span></div>
+      <p>Substitui um <b>assentamento</b> seu. Não dá carta: é pura pontuação, e o degrau para o castelo.</p>
+    </div>
+    <div class="card-box">
+      <svg class="piece"><use href="#p-castle"/></svg>
+      <h3>Castelo</h3>
+      <div class="meta"><span class="cost"><svg class="ic"><use href="#i-pedra"/></svg><svg class="ic"><use href="#i-madeira"/></svg> 3<svg class="ic"><use href="#i-moeda"/></svg></span><span class="pv">4 PV</span></div>
+      <p>Substitui uma <b>torre</b> sua. A construção mais valiosa do jogo, e o alvo preferido da Sabotadora.</p>
+    </div>
+    <div class="card-box">
+      <svg class="piece" style="color:var(--ink)"><use href="#p-wall"/></svg>
+      <h3>Muralha</h3>
+      <div class="meta"><span class="cost"><svg class="ic"><use href="#i-pedra"/></svg> 3<svg class="ic"><use href="#i-moeda"/></svg></span><span class="pv">0 PV</span></div>
+      <p>Cerca qualquer construção sua. Ela fica <b>imune ao Incendiário e à Sabotadora</b>. Se a construção for melhorada, a muralha continua.</p>
+    </div>
+  </div>
+  <div class="callout">
+    <p><b>Trocando peças:</b> ao melhorar uma construção, devolva a peça antiga à sua reserva. Cada jogador tem 10 assentamentos, 4 oficinas, 4 torres e 2 castelos. Acabaram as peças de um tipo, acabou a possibilidade de construir aquele tipo.</p>
+  </div>
+  <figure class="fig">
+    <img src="img/3d/mesa.webp" alt="Três hexágonos com peças: uma vilinha sobre a Vila, uma torre cercada por muralha sobre a Floresta e um castelo sobre o Coração">
+    <figcaption>Um assentamento numa Vila, uma torre com muralha numa Floresta e um castelo no Coração (4 + 2 = 6 PV).</figcaption>
+  </figure>
+</section>
+
+<section id="terrenos">
+  <div class="eyebrow">O mapa</div>
+  <h2>Terrenos</h2>
+  <p>O terreno define a carta que o assentamento dá, a carta que a oficina dá e, nas ruínas, um bônus de pontos. O medalhão em cada hexágono mostra o recurso.</p>
+  <div class="terr">
+    <figure><img src="img/hex/T01.webp" alt="Hexágono de Floresta"><figcaption><b>Floresta</b> assentamento: Bosque +1 <svg class="ic"><use href="#i-madeira"/></svg><br>oficina: Serraria +2 <svg class="ic"><use href="#i-madeira"/></svg></figcaption></figure>
+    <figure><img src="img/hex/T02.webp" alt="Hexágono de Campo"><figcaption><b>Campo</b> assentamento: Lavoura +1 <svg class="ic"><use href="#i-grao"/></svg><br>oficina: Moinho +2 <svg class="ic"><use href="#i-grao"/></svg></figcaption></figure>
+    <figure><img src="img/hex/T03.webp" alt="Hexágono de Colina"><figcaption><b>Colina</b> assentamento: Lavra +1 <svg class="ic"><use href="#i-pedra"/></svg><br>oficina: Pedreira +2 <svg class="ic"><use href="#i-pedra"/></svg></figcaption></figure>
+    <figure><img src="img/hex/T04.webp" alt="Hexágono de Vila"><figcaption><b>Vila</b> assentamento: Feira +2 <svg class="ic"><use href="#i-moeda"/></svg><br>oficina: Mercado +3 <svg class="ic"><use href="#i-moeda"/></svg></figcaption></figure>
+    <figure><img src="img/hex/T05.webp" alt="Hexágono de Ruína"><figcaption><b>Ruína</b> <span class="pv">+1 PV</span> assentamento: Relíquia (1 PV no fim)<br>oficina: Santuário +1 <svg class="ic"><use href="#i-moeda"/></svg>, 2 PV no fim</figcaption></figure>
+    <figure><img src="img/hex/T06.webp" alt="Hexágono do Coração"><figcaption><b>Coração</b> <span class="pv">+2 PV</span> funciona como uma Ruína, no centro do mapa. Só existe um.</figcaption></figure>
+  </div>
+  <p style="margin-top:16px">Construir em Ruína ou no Coração custa <svg class="ic"><use href="#i-pedra"/></svg> a mais, e qualquer construção sua ali vale o bônus: um castelo no Coração são 6 PV.</p>
+</section>
+
+<section id="pontos">
+  <div class="eyebrow">Como se ganha</div>
+  <h2>Pontos e fim da partida</h2>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Pontos no mapa</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Construção</th><th class="num">PV</th></tr></thead>
+        <tbody>
+          <tr><td><svg class="ic big piece-ic" style="fill:var(--ink)"><use href="#p-settle"/></svg> Assentamento</td><td class="num"><span class="pv">1</span></td></tr>
+          <tr><td><svg class="ic big" style="fill:var(--ink)"><use href="#p-shop"/></svg> Oficina</td><td class="num"><span class="pv">1</span></td></tr>
+          <tr><td><svg class="ic big" style="fill:var(--ink)"><use href="#p-tower"/></svg> Torre</td><td class="num"><span class="pv">2</span></td></tr>
+          <tr><td><svg class="ic big" style="fill:var(--ink)"><use href="#p-castle"/></svg> Castelo</td><td class="num"><span class="pv">4</span></td></tr>
+          <tr><td>Em Ruína, qualquer construção</td><td class="num"><span class="pv">+1</span></td></tr>
+          <tr><td>No Coração, qualquer construção</td><td class="num"><span class="pv">+2</span></td></tr>
+          <tr><td>Muralha</td><td class="num"><span class="pv">0</span></td></tr>
+        </tbody>
+      </table></div>
+      <p>Os pontos são sempre <b>o que está no mapa agora</b>. Se um ataque derruba ou rebaixa uma construção sua, você perde os pontos dela na hora.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Meta</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Jogadores</th><th class="num">Meta no mapa</th></tr></thead>
+        <tbody><tr><td>2</td><td class="num"><b>18 PV</b></td></tr><tr><td>3</td><td class="num"><b>16 PV</b></td></tr><tr><td>4</td><td class="num"><b>15 PV</b></td></tr></tbody>
+      </table></div>
+      <h3>Fim da partida</h3>
+      <ol>
+        <li>Quando alguém termina o turno com a meta no mapa, a partida entra na <b>última rodada</b>: joga-se até o jogador à direita de quem começou.</li>
+        <li>Cada jogador soma os pontos do mapa às <b>cartas de pontos</b> de todo o seu baralho, mão e descarte: <b>Monumento 3</b>, <b>Santuário 2</b>, <b>Relíquia 1</b> e <b>Entulho −1</b>.</li>
+        <li>Quem tiver mais pontos vence. Empate: quem tiver <b>mais construções</b> no mapa.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="ataques">
+  <div class="eyebrow">Atrapalhando os vizinhos</div>
+  <h2>Ataques e defesa</h2>
+  <p>As cartas de moldura vermelha atacam ao serem jogadas. Todas também geram um recurso, então nunca são um turno perdido.</p>
+  <div class="atk">
+    <figure><img src="img/cartas/C24.webp" alt="Carta Saqueadora"><div><b class="t">Saqueadora</b><p>Cada oponente embaralha a mão, e você tira <b>uma carta às cegas</b> dela para o descarte dele.</p></div></figure>
+    <figure><img src="img/cartas/C25.webp" alt="Carta Incendiário"><div><b class="t">Incendiário</b><p>Destrua um <b>assentamento ou oficina</b> rival vizinho de uma construção sua. O hexágono fica livre; o dono devolve a peça, mas fica com as cartas que ganhou.</p></div></figure>
+    <figure><img src="img/cartas/C26.webp" alt="Carta Sabotadora"><div><b class="t">Sabotadora</b><p>Rebaixe uma construção rival <b>um nível</b>: castelo vira torre, torre ou oficina vira assentamento. Não afeta assentamentos.</p></div></figure>
+    <figure><img src="img/cartas/C27.webp" alt="Carta Tempestade de Cinzas"><div><b class="t">Tempestade de Cinzas</b><p>Cada oponente coloca <b>1 Entulho</b> no descarte. O Entulho não faz nada e vale −1 PV no fim. Acabaram os 12, acabou a tempestade.</p></div></figure>
+    <figure><img src="img/cartas/C28.webp" alt="Carta Guarda"><div><b class="t">Guarda</b><p>Se a Guarda estiver na sua mão quando você for atacado, <b>mostre-a e bloqueie o ataque</b>. Ela continua na mão. No seu turno, você pode jogá-la por madeira ou guardá-la.</p></div></figure>
+  </div>
+  <div class="callout">
+    <p><b>Muralha:</b> uma construção cercada por muralha não pode ser alvo do Incendiário nem da Sabotadora. A Saqueadora e a Tempestade atacam o jogador, não o mapa, e só a Guarda as detém.</p>
+  </div>
+</section>
+
+<section id="outras">
+  <div class="eyebrow">Miúdos que fazem diferença</div>
+  <h2>Outras regras</h2>
+  <div class="cols">
+    <div class="card-box"><h3>Troca</h3><p>A qualquer momento do seu turno, entregue <b>3 recursos iguais</b> e receba <b>1</b> de outro tipo. Com o <b>Negociante</b> em jogo, a troca é 2 por 1 até o fim do turno.</p></div>
+    <div class="card-box"><h3>Exílio</h3><p><b>Uma vez por turno</b>, pague 2 <svg class="ic"><use href="#i-moeda"/></svg> para tirar uma carta da mão do jogo. O <b>Ermitão</b> exila uma carta de graça. É assim que você se livra de Colonos fracos e de Entulho.</p></div>
+    <div class="card-box"><h3>Armazém</h3><p>No fim do turno em que jogou o Armazém, <b>guarde até 2 recursos</b> em vez de devolvê-los. Eles ficam disponíveis no seu próximo turno.</p></div>
+    <div class="card-box"><h3>Cartógrafo</h3><p>Neste turno, seus assentamentos <b>não precisam ser vizinhos</b> de uma construção sua: dá para pular para a Ruína do outro lado do mapa.</p></div>
+    <div class="card-box"><h3>Cartas que contam</h3><p><b>Pedágio</b>: +1 <svg class="ic"><use href="#i-moeda"/></svg> por torre ou castelo seu. <b>Taberneira</b>: +1 <svg class="ic"><use href="#i-moeda"/></svg> por construção sua, até 3. <b>Cobradora</b>: +1 <svg class="ic"><use href="#i-moeda"/></svg>, e mais 1 por oponente com mais pontos no mapa que você.</p></div>
+    <div class="card-box"><h3>Comprar cartas</h3><p>Efeitos de "+1 carta" compram do seu baralho na hora. Se o baralho acabou, embaralhe o descarte, sem as cartas já jogadas neste turno.</p></div>
+  </div>
+</section>
+
+<section id="cartas">
+  <div class="eyebrow">Referência</div>
+  <h2>Todas as cartas</h2>
+  <p>As 37 cartas diferentes e quantas de cada vêm na caixa. O número no canto é o custo no mercado; cartas sem custo não são compradas, são ganhas ao construir ou já começam no seu baralho.</p>
+  <div id="gal"></div>
+</section>
+
+<section id="baralho">
+  <div class="eyebrow">Para testar sem imprimir nada</div>
+  <h2>Jogando com baralhos comuns</h2>
+  <p>Com <b>4 baralhos de 52 cartas</b> com o mesmo verso (ou em sleeves opacos), dá para jogar sem as cartas impressas. Cada carta do Terra Fértil corresponde a uma carta do baralho, e as 4 cópias dão conta das quantidades. Os coringas não são usados.</p>
+  <div class="suits">
+    <div class="suit">
+      <h3><span class="s">♣</span> Paus: baralho inicial e Entulho</h3>
+      <div class="tbl"><table><thead><tr><th>Carta</th><th>É o quê</th></tr></thead><tbody>
+        <tr><td>A, 2, 3, 4, 5</td><td>Colono</td></tr><tr><td>6, 7</td><td>Lenhador</td></tr><tr><td>8, 9</td><td>Agricultora</td></tr><tr><td>10</td><td>Pedreiro</td></tr><tr><td>J, Q, K</td><td>Entulho (12 no total)</td></tr>
+      </tbody></table></div>
+      <p>O baralho inicial de cada jogador é o <b>Ás ao 10 de paus</b> de um dos baralhos.</p>
+    </div>
+    <div class="suit">
+      <h3><span class="s r">♥</span> Copas: produção</h3>
+      <div class="tbl"><table><thead><tr><th>Carta</th><th>É o quê</th></tr></thead><tbody>
+        <tr><td>A, 2, 3</td><td>Bosque</td></tr><tr><td>4, 5, 6</td><td>Lavoura</td></tr><tr><td>7, 8</td><td>Lavra</td></tr><tr><td>9, 10</td><td>Feira</td></tr><tr><td>J, Q</td><td>Relíquia</td></tr><tr><td>K</td><td>Santuário</td></tr>
+      </tbody></table></div>
+      <p>Ficam em pilhas separadas ao lado do mapa.</p>
+    </div>
+    <div class="suit">
+      <h3><span class="s">♠</span> Espadas: ataques, defesa e oficinas</h3>
+      <div class="tbl"><table><thead><tr><th>Carta</th><th>É o quê</th><th class="num">Manter</th></tr></thead><tbody>
+        <tr><td>A</td><td>Saqueadora</td><td class="num">3</td></tr><tr><td>2</td><td>Incendiário</td><td class="num">2</td></tr><tr><td>3</td><td>Sabotadora</td><td class="num">2</td></tr><tr><td>4</td><td>Tempestade de Cinzas</td><td class="num">3</td></tr><tr><td>5</td><td>Guarda</td><td class="num">4</td></tr><tr><td>6</td><td>Ermitão</td><td class="num">3</td></tr><tr><td>7</td><td>Batedora</td><td class="num">3</td></tr><tr><td>8</td><td>Cartógrafo</td><td class="num">2</td></tr><tr><td>9</td><td>Monumento</td><td class="num">3</td></tr>
+        <tr><td>10</td><td>Serraria</td><td class="num">pilha</td></tr><tr><td>J</td><td>Moinho</td><td class="num">pilha</td></tr><tr><td>Q</td><td>Pedreira</td><td class="num">pilha</td></tr><tr><td>K</td><td>Mercado</td><td class="num">pilha</td></tr>
+      </tbody></table></div>
+    </div>
+    <div class="suit">
+      <h3><span class="s r">♦</span> Ouros: mercado</h3>
+      <div class="tbl"><table><thead><tr><th>Carta</th><th>É o quê</th><th class="num">Manter</th></tr></thead><tbody>
+        <tr><td>A</td><td>Mercador</td><td class="num">3</td></tr><tr><td>2</td><td>Serralheira</td><td class="num">3</td></tr><tr><td>3</td><td>Celeiro</td><td class="num">3</td></tr><tr><td>4</td><td>Canteiro</td><td class="num">3</td></tr><tr><td>5</td><td>Arauto</td><td class="num">3</td></tr><tr><td>6</td><td>Engenheira</td><td class="num">2</td></tr><tr><td>7</td><td>Pioneiro</td><td class="num">2</td></tr><tr><td>8</td><td>Pedágio</td><td class="num">2</td></tr><tr><td>9</td><td>Taberneira</td><td class="num">2</td></tr><tr><td>10</td><td>Cobradora</td><td class="num">2</td></tr><tr><td>J</td><td>Armazém</td><td class="num">3</td></tr><tr><td>Q</td><td>Negociante</td><td class="num">3</td></tr><tr><td>K</td><td>Prefeita</td><td class="num">2</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+  <div class="callout">
+    <p><b>Montando o mercado:</b> junte todas as ouros e as espadas do Ás ao 9. De cada carta com "Manter 3", tire 1 das 4 cópias; com "Manter 2", tire 2; a Guarda fica com as 4. Sobram 58 cartas: embaralhe e abra 6. Use feijões ou moedas como recursos, e as peças impressas, botões ou peões de outro jogo como construções.</p>
+  </div>
+</section>
+
+<section id="resumo">
+  <div class="eyebrow">Para deixar na mesa</div>
+  <h2>Resumo rápido</h2>
+  <div class="ref">
+    <h3>Terra Fértil em uma olhada</h3>
+    <div class="cols">
+      <div>
+        <b>Seu turno</b>
+        <ul>
+          <li>Jogue cartas e pegue os recursos</li>
+          <li>Compre no mercado (6 cartas abertas)</li>
+          <li>Construa quantas vezes pagar</li>
+          <li>Troque 3:1 à vontade · exile 1 carta por 2 <svg class="ic"><use href="#i-moeda"/></svg></li>
+          <li>Descarte tudo, perca os recursos, compre 5</li>
+        </ul>
+      </div>
+      <div>
+        <b>Construções</b>
+        <ul>
+          <li>Assentamento <span class="cost"><svg class="ic"><use href="#i-madeira"/></svg><svg class="ic"><use href="#i-grao"/></svg></span> → 1 PV + carta do terreno</li>
+          <li>Oficina <span class="cost"><svg class="ic"><use href="#i-madeira"/></svg><svg class="ic"><use href="#i-pedra"/></svg> 2<svg class="ic"><use href="#i-moeda"/></svg></span> → 1 PV + carta dobrada</li>
+          <li>Torre <span class="cost"><svg class="ic"><use href="#i-pedra"/></svg><svg class="ic"><use href="#i-grao"/></svg> 2<svg class="ic"><use href="#i-moeda"/></svg></span> → 2 PV</li>
+          <li>Castelo <span class="cost"><svg class="ic"><use href="#i-pedra"/></svg><svg class="ic"><use href="#i-madeira"/></svg> 3<svg class="ic"><use href="#i-moeda"/></svg></span> → 4 PV (sobre torre)</li>
+          <li>Muralha <span class="cost"><svg class="ic"><use href="#i-pedra"/></svg> 3<svg class="ic"><use href="#i-moeda"/></svg></span> → protege</li>
+          <li>Ruína +1 PV e +<svg class="ic"><use href="#i-pedra"/></svg> · Coração +2 PV</li>
+        </ul>
+      </div>
+      <div>
+        <b>Fim</b>
+        <ul>
+          <li>Meta no mapa: <b>15</b> (4 jog.) · <b>16</b> (3) · <b>18</b> (2)</li>
+          <li>Termina a rodada</li>
+          <li>Some as cartas: Monumento 3 · Santuário 2 · Relíquia 1 · Entulho −1</li>
+          <li>Empate: mais construções</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="wrap">Terra Fértil · protótipo v0.5 · um jogo do canal <b>MultiVersoNaMesa</b>. © 2026 Lucas. Todos os direitos reservados. Regras sujeitas a ajuste nos testes de mesa.</footer>
+
+<script>
+const G=[
+ ['Iniciais','Cada jogador começa com estas 10 cartas.',[['C01','Colono',20],['C02','Lenhador',8],['C03','Agricultora',8],['C04','Pedreiro',4]]],
+ ['Mercado','58 cartas no baralho do mercado.',[['C05','Batedora',3],['C06','Ermitão',3],['C07','Mercador',3],['C08','Serralheira',3],['C09','Celeiro',3],['C10','Canteiro',3],['C11','Arauto',3],['C12','Engenheira',2],['C13','Cartógrafo',2],['C14','Prefeita',2],['C15','Pioneiro',2],['C16','Monumento',3],['C17','Pedágio',2],['C18','Taberneira',2],['C29','Cobradora',2],['C30','Armazém',3],['C31','Negociante',3],['C28','Guarda',4],['C24','Saqueadora',3],['C25','Incendiário',2],['C26','Sabotadora',2],['C27','Tempestade de Cinzas',3]]],
+ ['Produção','Ganhas ao fundar um assentamento.',[['C19','Bosque',9],['C20','Lavoura',9],['C21','Lavra',7],['C22','Feira',6],['C23','Relíquia',6]]],
+ ['Oficinas','Ganhas ao construir uma oficina.',[['C33','Serraria',4],['C34','Moinho',4],['C35','Pedreira',4],['C36','Mercado',3],['C37','Santuário',3]]],
+ ['Entulho','Chega pela Tempestade de Cinzas.',[['C32','Entulho',12]]],
+];
+document.getElementById('gal').innerHTML=G.map(([t,d,cs])=>`<h3>${t} <span style="color:var(--muted);font-family:var(--body);font-weight:400;font-size:16px">· ${cs.reduce((a,c)=>a+c[2],0)} cartas</span></h3><p style="margin-top:0">${d}</p><div class="gal">${cs.map(([k,n,q])=>`<figure><img src="img/cartas/${k}.webp" alt="Carta ${n}"><figcaption><b>${n}</b><span>×${q}</span></figcaption></figure>`).join('')}</div>`).join('');
+</script>
+</body>
+</html>
